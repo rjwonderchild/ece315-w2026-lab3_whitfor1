@@ -23,12 +23,12 @@ if (slave_primed == pdFALSE) {
 }
 
 spiSlaveRead(rx_frame, TRANSFER_SIZE_IN_BYTES);
-spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
+spiSlaveTransfer(tx_frame, rx_frame, TRnANSFER_SIZE_IN_BYTES);
 
 Then inside of the reset device else statement, we added: slave_primed = pdFALSE.
 
 This ended up resolving the task overflowing its stack problem, but now presented a new one.
 
-%%Problem: Whenever we enter a value, it echoes $ in the output. So our window terminal looks like: a$b$c$d$e$f$g$h$i$j$k$l$m$n$o$p$q$r$s$t$u$v$w$x$y$z.This is wrong. This out solution:
+%%Problem: There are a lot of problems with this code.
 
 Answer:
