@@ -3,6 +3,32 @@ This file will contain all debugging that occurred.
 -------------------------------------
 Part 1 Problems
 -------------------------------------
-Problem: Upon doing \r2\r, we would be welcomed with: "*** SPI Loop-back ON ***". Upon entering a single character, the previous value stored inside of the slave is provided to the SPI master, but this value is so large that immediately after entering the single character, we are hit with: "HALT: Task overflowed its stack.".
+%%Problem: Upon doing \r2\r, we would be welcomed with: "*** SPI Loop-back ON ***". Upon entering a single character, the previous value stored inside of the slave is provided to the SPI master, but this value is so large that immediately after entering the single character, we are hit with: "HALT: Task overflowed its stack.".
 
 To fix this issue, we did the following:
+We made changes to TODO 10.
+
+Before it was only: spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
+
+Now it looks like this:
+
+A variable was declared: 
+static BaseType_t slave_primed = pdFALSE;
+
+Along with an if statement that will only do the check on its very first iteration, (i.e. when the code shows the "HALT: Task overflowed its stack." output):
+if (slave_primed == pdFALSE) {
+    memset(tx_frame, CHAR_DOLLAR, TRANSFER_SIZE_IN_BYTES);
+    spiSlaveWrite(tx_frame, TRANSFER_SIZE_IN_BYTES);
+    slave_primed = pdTRUE; // resets lower
+}
+
+spiSlaveRead(rx_frame, TRANSFER_SIZE_IN_BYTES);
+spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
+
+Then inside of the reset device else statement, we added: slave_primed = pdFALSE.
+
+This ended up resolving the task overflowing its stack problem, but now presented a new one.
+
+%%Problem: Whenever we enter a value, it echoes $ in the output. So our window terminal looks like: a$b$c$d$e$f$g$h$i$j$k$l$m$n$o$p$q$r$s$t$u$v$w$x$y$z.This is wrong. This out solution:
+
+Answer:
