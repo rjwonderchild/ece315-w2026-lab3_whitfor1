@@ -1,1 +1,37 @@
 ECE 315 Lab 3 Questions & Solutions to those questions:
+
+-------------------------------------
+Part 1 Questions & Responses
+-------------------------------------
+
+
+
+-------------------------------------
+Part 2 Questions & Responses
+-------------------------------------
+
+
+
+-------------------------------------
+Discussion Questions & Responses
+-------------------------------------
+
+1. How does activating the loopback mode in both (UART and SPI) impact the interaction and data flow between vUartTask, vSpiMainTask and vSpiSubTask?
+
+Response:
+
+2. What difficulties did you encounter while setting up SPI communication between the main and sub devices, and what solutions did you implement?
+
+Response:
+
+3. Describe the challenges that you faced when interfacing with the Pmod OLED screen and describe how you resolved them.
+
+Response:
+
+4. Does input from the peripherals affect the dynamic nad graphics on the Pmod OLED screen? Give examples from your game.
+
+Response:
+
+5. Reflecting on this lab's activities, how have the tasks and experiments deepend your understanding of designing embedded systems and operating within a real-time OS framework?
+
+Response:
