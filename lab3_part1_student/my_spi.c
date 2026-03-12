@@ -60,21 +60,22 @@ static void spiRead(XSpiPs *inst, u8 *recvBuffer, int byteCount)
 void spiMasterWrite(const u8 *tx, int byteCount)
 {
     // TODO 4: write the body for this function 
-
+    spiWrite(&spiMasterInst, tx, byteCount);
 }
 
 
 void spiMasterRead(u8 *rx, int byteCount)
 {
     // TODO 5: write the body for this function
-
+    spiRead(&spiMasterInst, rx, byteCount);
 }
 
 
 void spiMasterTransfer(const u8 *tx, u8 *rx, int byteCount)
 {
 	// TODO 6: write the body for this function using spiMasterWrite and spiMasterRead
-
+    spiMasterWrite(tx, byteCount);
+    spiMasterRead(rx, byteCount);
 }
 
 
@@ -84,14 +85,14 @@ void spiMasterTransfer(const u8 *tx, u8 *rx, int byteCount)
 void spiSlaveWrite(const u8 *tx, int byteCount)
 {
     // TODO 7: write the body for this function
-
+    spiWrite(&spiSlaveInst, tx, byteCount);
 }
 
 
 void spiSlaveRead(u8 *rx, int byteCount)
 {
 	// TODO 8: write the body for this function
-
+    spiRead(&spiSlaveInst, rx, byteCount);
 }
 
 
