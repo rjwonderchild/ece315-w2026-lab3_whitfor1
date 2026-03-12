@@ -60,48 +60,14 @@ static void spiRead(XSpiPs *inst, u8 *recvBuffer, int byteCount)
 void spiMasterWrite(const u8 *tx, int byteCount)
 {
     // TODO 4: write the body for this function 
-    // spiWrite(&spiMasterInst, tx, byteCount);
-	int count;
-    u32 baseAddr;
-    u32 statusReg;
-
-    if ((tx == NULL) || (byteCount <= 0)) {
-        return;
-    }
-
-    baseAddr = spiMasterInst.Config.BaseAddress;
-
-    for (count = 0; count < byteCount; count++) {
-        do {
-            statusReg = XSpiPs_ReadReg(baseAddr, XSPIPS_SR_OFFSET);
-        } while (statusReg & XSPIPS_IXR_TXFULL_MASK);
-
-        SpiPs_SendByte(baseAddr, tx[count]);
-    }
+    spiWrite(&spiMasterInst, tx, byteCount);
 }
 
 
 void spiMasterRead(u8 *rx, int byteCount)
 {
     // TODO 5: write the body for this function
-    //spiRead(&spiMasterInst, rx, byteCount);
-    int count;
-    u32 baseAddr;
-    u32 statusReg;
-
-    if ((tx == NULL) || (byteCount <= 0)) {
-        return;
-    }
-
-    baseAddr = spiSlaveInst.Config.BaseAddress;
-
-    for (count = 0; count < byteCount; count++) {
-        do {
-            statusReg = XSpiPs_ReadReg(baseAddr, XSPIPS_SR_OFFSET);
-        } while (statusReg & XSPIPS_IXR_TXFULL_MASK);
-
-        SpiPs_SendByte(baseAddr, tx[count]);
-    }
+    spiRead(&spiMasterInst, rx, byteCount);
 }
 
 
@@ -119,45 +85,15 @@ void spiMasterTransfer(const u8 *tx, u8 *rx, int byteCount)
 void spiSlaveWrite(const u8 *tx, int byteCount)
 {
     // TODO 7: write the body for this function
-    //spiWrite(&spiSlaveInst, tx, byteCount);
-	int count;
-    u32 baseAddr;
-    u32 statusReg;
-
-    if ((tx == NULL) || (byteCount <= 0)) {
-        return;
-    }
-
-    baseAddr = spiSlaveInst.Config.BaseAddress;
-
-    for (count = 0; count < byteCount; count++) {
-        do {
-            statusReg = XSpiPs_ReadReg(baseAddr, XSPIPS_SR_OFFSET);
-        } while (statusReg & XSPIPS_IXR_TXFULL_MASK);
-
-        SpiPs_SendByte(baseAddr, tx[count]);
-    }
+    spiWrite(&spiSlaveInst, tx, byteCount);
 }
 
 
 void spiSlaveRead(u8 *rx, int byteCount)
 {
 	// TODO 8: write the body for this function
-    // spiRead(&spiSlaveInst, rx, byteCount);
-	
-	static BaseType_t slave_primed = pdFALSE;
-
-    if (slave_primed == pdFALSE) {
-        memset(tx_frame, CHAR_DOLLAR, TRANSFER_SIZE_IN_BYTES);
-        spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
-        slave_primed = pdTRUE;
-        vTaskDelay(1);
-        continue;
-    }
-
-    spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
+    spiRead(&spiSlaveInst, rx, byteCount);
 }
-
 
 void spiSlaveTransfer(const u8 *tx, u8 *rx, int byteCount)
 {
@@ -205,5 +141,3 @@ int spiInit(u32 masterDeviceId, u32 slaveDeviceId)
 
 	return XST_SUCCESS;
 }
-
-
