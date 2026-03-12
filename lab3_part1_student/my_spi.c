@@ -60,14 +60,7 @@ static void spiRead(XSpiPs *inst, u8 *recvBuffer, int byteCount)
 void spiMasterWrite(const u8 *tx, int byteCount)
 {
     // TODO 4: write the body for this function 
-    spiWrite(&spiMasterInst, tx, byteCount);
-}
-
-
-void spiMasterRead(u8 *rx, int byteCount)
-{
-    // TODO 5: write the body for this function
-    //spiRead(&spiMasterInst, rx, byteCount);
+    // spiWrite(&spiMasterInst, tx, byteCount);
 	int count;
     u32 baseAddr;
     u32 statusReg;
@@ -77,6 +70,30 @@ void spiMasterRead(u8 *rx, int byteCount)
     }
 
     baseAddr = spiMasterInst.Config.BaseAddress;
+
+    for (count = 0; count < byteCount; count++) {
+        do {
+            statusReg = XSpiPs_ReadReg(baseAddr, XSPIPS_SR_OFFSET);
+        } while (statusReg & XSPIPS_IXR_TXFULL_MASK);
+
+        SpiPs_SendByte(baseAddr, tx[count]);
+    }
+}
+
+
+void spiMasterRead(u8 *rx, int byteCount)
+{
+    // TODO 5: write the body for this function
+    //spiRead(&spiMasterInst, rx, byteCount);
+    int count;
+    u32 baseAddr;
+    u32 statusReg;
+
+    if ((tx == NULL) || (byteCount <= 0)) {
+        return;
+    }
+
+    baseAddr = spiSlaveInst.Config.BaseAddress;
 
     for (count = 0; count < byteCount; count++) {
         do {
@@ -188,4 +205,5 @@ int spiInit(u32 masterDeviceId, u32 slaveDeviceId)
 
 	return XST_SUCCESS;
 }
+
 
