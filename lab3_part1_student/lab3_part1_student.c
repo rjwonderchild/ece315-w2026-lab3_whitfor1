@@ -41,8 +41,10 @@
 #include "xparameters.h"
 #include "xil_printf.h"
 #include "stdio.h"
+#include <portmacro.h>
 #include <projdefs.h>
 #include <stddef.h>
+#include <stdio.h>
 #include "string.h"
 #include "my_uart.h"
 #include "my_spi.h"
@@ -272,6 +274,7 @@ static void vSpiSubTask(void *pvParameters)
     int message_byte_count = 0;
     BaseType_t report_stream_active = pdFALSE;
     int i;
+    static BaseType_t slave_primed = pdFALSE;
 
     memset(rx_frame, 0, TRANSFER_SIZE_IN_BYTES);
     // prepare for transmission, load data into tx_frame
@@ -280,6 +283,15 @@ static void vSpiSubTask(void *pvParameters)
     while (1) {
         if (spi_loopback && command_flag == 2) {
 			// TODO 10: slave transmission
+            
+            if (slave_primed == pdFALSE) {
+                memset(tx_frame, CHAR_DOLLAR, TRANSFER_SIZE_IN_BYTES);
+                spiSlaveWrite(tx_frame, TRANSFER_SIZE_IN_BYTES);
+                slave_primed = pdTRUE; // resets lower
+            }
+
+            spiSlaveRead(rx_frame, TRANSFER_SIZE_IN_BYTES);
+
 			spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
 			if (report_stream_active) {
 				// fill tx_buffer with control characters
@@ -353,6 +365,7 @@ static void vSpiSubTask(void *pvParameters)
             report_len = 0;
             report_idx = 0;
             report_stream_active = pdFALSE;
+            slave_primed = pdFALSE;
         }
 
         vTaskDelay(10);
