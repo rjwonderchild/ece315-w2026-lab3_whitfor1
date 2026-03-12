@@ -1,1 +1,8 @@
 This file will contain all debugging that occurred.
+
+-------------------------------------
+Part 1 Problems
+-------------------------------------
+Problem: Upon doing \r2\r, we would be welcomed with: "*** SPI Loop-back ON ***". Upon entering a single character, the previous value stored inside of the slave is provided to the SPI master, but this value is so large that immediately after entering the single character, we are hit with: "HALT: Task overflowed its stack.".
+
+To fix this issue, we did the following:
