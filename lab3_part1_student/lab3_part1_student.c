@@ -172,7 +172,6 @@ static void vUartManagerTask(void *pvParameters)
 
     		report_flag = 0;
 		}
-}
 			/*
             xQueueSend(uart_to_spi, &dummy, 0);
 
@@ -185,9 +184,7 @@ static void vUartManagerTask(void *pvParameters)
             uartWriteByte(spi_byte);
             }
 			*/
-			
-        }
-        
+		
         if (uartReadByte(&uart_byte)) {
             updateRollingBuffer(rolling, uart_byte);
 			
