@@ -158,6 +158,22 @@ static void vUartManagerTask(void *pvParameters)
     while (1) {
         if (report_flag) {
             // TODO 14: send $ until a $ is received
+    		do {
+        		xQueueSend(uart_to_spi, &dummy, 0);
+        		vTaskDelay(15);  // give SPI tasks time to process
+    		} while (!xQueueReceive(spi_to_uart, &spi_byte, pdMS_TO_TICKS(50))
+             		|| spi_byte != CHAR_DOLLAR);
+
+    		// Now drain any remaining report bytes already in the queue
+    		while (xQueueReceive(spi_to_uart, &spi_byte, pdMS_TO_TICKS(20))) {
+        			if (spi_byte == CHAR_DOLLAR) break;
+        			uartWriteByte(spi_byte);
+    		}
+
+    		report_flag = 0;
+		}
+}
+			/*
             xQueueSend(uart_to_spi, &dummy, 0);
 
             while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
@@ -168,6 +184,7 @@ static void vUartManagerTask(void *pvParameters)
 
             uartWriteByte(spi_byte);
             }
+			*/
 			
         }
         
