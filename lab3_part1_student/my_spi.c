@@ -145,3 +145,6 @@ int spiInit(u32 masterDeviceId, u32 slaveDeviceId)
 
 	return XST_SUCCESS;
 }
+
+	return XST_SUCCESS;
+}
