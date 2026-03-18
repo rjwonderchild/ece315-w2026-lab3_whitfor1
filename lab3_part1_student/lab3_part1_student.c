@@ -156,54 +156,56 @@ static void vUartManagerTask(void *pvParameters)
     int i;
 
     while (1) {
+
         if (report_flag) {
+
             // TODO 14: send $ until a $ is received
-    		do {
-        		xQueueSend(uart_to_spi, &dummy, 0);
-        		vTaskDelay(15);  // give SPI tasks time to process
-    		} while (!xQueueReceive(spi_to_uart, &spi_byte, pdMS_TO_TICKS(50))
-             		|| spi_byte != CHAR_DOLLAR);
 
-    		// Now drain any remaining report bytes already in the queue
-    		while (xQueueReceive(spi_to_uart, &spi_byte, pdMS_TO_TICKS(20))) {
-        			if (spi_byte == CHAR_DOLLAR) break;
-        			uartWriteByte(spi_byte);
-    		}
-
-    		report_flag = 0;
-		}
-			/*
-            xQueueSend(uart_to_spi, &dummy, 0);
-
-            while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
-            if (spi_byte == CHAR_DOLLAR) {
-                report_flag = 0;
-                break;
+            // Step 1: trigger SPI to start sending
+            for (i = 0; i < 10; i++) {
+                xQueueSend(uart_to_spi, &dummy, 0);
+                vTaskDelay(5);
             }
 
-            uartWriteByte(spi_byte);
+            // Step 2: read ALL incoming bytes and IGNORE '$'
+            while (1) {
+                if (xQueueReceive(spi_to_uart, &spi_byte, pdMS_TO_TICKS(50))) {
+
+                    if (spi_byte != CHAR_DOLLAR) {
+                        uartWriteByte(spi_byte);
+                    }
+
+                } else {
+                    // No more data → report finished
+                    break;
+                }
             }
-			*/
-		
+
+            report_flag = 0;
+        }
+
         if (uartReadByte(&uart_byte)) {
+
             updateRollingBuffer(rolling, uart_byte);
-			
-			// use checkCommand() before taking any action
-			// if a command is verified then continue with the next iteration
+
+            // use checkCommand() before taking any action
             if (checkCommand(rolling)) {
                 vTaskDelay(1);
                 continue;
             }
 
             if (uart_loopback && command_flag == 1) {
+
                 // TODO 1: write to uart
                 uartWriteByte(uart_byte);
 
                 if (terminationSequence(rolling)) {
                     terminateInput();
                 }
+
             } else if (command_flag == 2) {
-				// TODO 2: send to uart_to_spi
+
+                // TODO 2: send to uart_to_spi
                 xQueueSend(uart_to_spi, &uart_byte, 0);
 
                 if (!spi_loopback && terminationSequence(rolling)) {
@@ -212,6 +214,7 @@ static void vUartManagerTask(void *pvParameters)
             }
         }
 
+        // Drain any remaining SPI bytes
         while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
             uartWriteByte(spi_byte);
         }
