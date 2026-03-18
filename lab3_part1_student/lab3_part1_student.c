@@ -146,7 +146,6 @@ int main(void)
 /******************************************************************************
 /* UART MANAGER TASK */
 /******************************************************************************/
-
 static void vUartManagerTask(void *pvParameters)
 {
     const u8 dummy = CHAR_DOLLAR;
@@ -156,73 +155,58 @@ static void vUartManagerTask(void *pvParameters)
     int i;
 
     while (1) {
+        // --- Handle report from SPI subtask ---
+        if (report_flag && report_len > 0) {
+            // Send one byte per iteration from the report
+            uartWriteByte(report[report_idx]);
+            report_idx++;
 
-        if (report_flag) {
-
-            // TODO 14: send $ until a $ is received
-
-            // Step 1: trigger SPI to start sending
-            for (i = 0; i < 10; i++) {
-                xQueueSend(uart_to_spi, &dummy, 0);
-                vTaskDelay(5);
+            // Check if entire report has been sent
+            if (report_idx >= report_len) {
+                report_flag = 0;
+                report_len = 0;
+                report_idx = 0;
             }
-
-            // Step 2: read ALL incoming bytes and IGNORE '$'
-            while (1) {
-                if (xQueueReceive(spi_to_uart, &spi_byte, pdMS_TO_TICKS(50))) {
-
-                    if (spi_byte != CHAR_DOLLAR) {
-                        uartWriteByte(spi_byte);
-                    }
-
-                } else {
-                    // No more data → report finished
-                    break;
-                }
-            }
-
-            report_flag = 0;
         }
 
+        // --- Read incoming UART byte ---
         if (uartReadByte(&uart_byte)) {
-
             updateRollingBuffer(rolling, uart_byte);
 
-            // use checkCommand() before taking any action
+            // Check for command sequences like <ENTER>1<ENTER> or <ENTER>2<ENTER>
             if (checkCommand(rolling)) {
                 vTaskDelay(1);
                 continue;
             }
 
+            // UART loopback mode (command_flag == 1)
             if (uart_loopback && command_flag == 1) {
+                uartWriteByte(uart_byte);  // echo back the received byte
 
-                // TODO 1: write to uart
-                uartWriteByte(uart_byte);
-
+                // Stop input on termination sequence
                 if (terminationSequence(rolling)) {
                     terminateInput();
                 }
 
+            // SPI forwarding mode (command_flag == 2)
             } else if (command_flag == 2) {
-
-                // TODO 2: send to uart_to_spi
                 xQueueSend(uart_to_spi, &uart_byte, 0);
 
+                // Stop input on termination sequence if SPI loopback is off
                 if (!spi_loopback && terminationSequence(rolling)) {
                     terminateInput();
                 }
             }
         }
 
-        // Drain any remaining SPI bytes
+        // --- Receive SPI responses and send to UART ---
         while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
             uartWriteByte(spi_byte);
         }
 
-        vTaskDelay(1);
+        vTaskDelay(1);  // give other tasks time to run
     }
 }
-
 /******************************************************************************
 /* SPI MAIN TASK */
 /******************************************************************************/
