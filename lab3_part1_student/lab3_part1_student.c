@@ -146,6 +146,7 @@ int main(void)
 /******************************************************************************
 /* UART MANAGER TASK */
 /******************************************************************************/
+
 static void vUartManagerTask(void *pvParameters)
 {
     const u8 dummy = CHAR_DOLLAR;
@@ -155,58 +156,53 @@ static void vUartManagerTask(void *pvParameters)
     int i;
 
     while (1) {
-        // --- Handle report from SPI subtask ---
-        if (report_flag && report_len > 0) {
-            // Send one byte per iteration from the report
-            uartWriteByte(report[report_idx]);
-            report_idx++;
+        if (report_flag) {
+            // TODO 14: send $ until a $ is received
+			xQueueSend(spi_to_uart, &dummy, 0);
 
-            // Check if entire report has been sent
-            if (report_idx >= report_len) {
-                report_flag = 0;
-                report_len = 0;
-                report_idx = 0;
+            while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
+                if (spi_byte == CHAR_DOLLAR) {
+                    report_flag = 0;
+                    break;
+                }
             }
         }
-
-        // --- Read incoming UART byte ---
+        
         if (uartReadByte(&uart_byte)) {
             updateRollingBuffer(rolling, uart_byte);
-
-            // Check for command sequences like <ENTER>1<ENTER> or <ENTER>2<ENTER>
+			
+			// use checkCommand() before taking any action
+			// if a command is verified then continue with the next iteration
             if (checkCommand(rolling)) {
                 vTaskDelay(1);
                 continue;
             }
 
-            // UART loopback mode (command_flag == 1)
             if (uart_loopback && command_flag == 1) {
-                uartWriteByte(uart_byte);  // echo back the received byte
+                // TODO 1: write to uart
+                uartWriteByte(uart_byte);
 
-                // Stop input on termination sequence
                 if (terminationSequence(rolling)) {
                     terminateInput();
                 }
-
-            // SPI forwarding mode (command_flag == 2)
             } else if (command_flag == 2) {
+				// TODO 2: send to uart_to_spi
                 xQueueSend(uart_to_spi, &uart_byte, 0);
 
-                // Stop input on termination sequence if SPI loopback is off
                 if (!spi_loopback && terminationSequence(rolling)) {
                     terminateInput();
                 }
             }
         }
 
-        // --- Receive SPI responses and send to UART ---
         while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
             uartWriteByte(spi_byte);
         }
 
-        vTaskDelay(1);  // give other tasks time to run
+        vTaskDelay(1);
     }
 }
+
 /******************************************************************************
 /* SPI MAIN TASK */
 /******************************************************************************/
@@ -228,8 +224,8 @@ static void vSpiMainTask(void *pvParameters)
                 if (!spi_loopback) { // if spi_loopback is disabled echoes back the received bytes
                     // TODO 3: echo back received bytes by sending to the appropriate queue
 					// after this is implemented spi loopback diabled should echo back the received bytes
-                    xQueueSend(spi_to_uart, &uart_byte, 0);
-					
+					xQueueSend(spi_to_uart, &uart_byte, 0);
+
                 } else {		// if spi loopback is enabled prepare to send data frames
                     tx_frame[frame_index] = uart_byte; // load byte into data frame
                     frame_index++;
@@ -284,9 +280,8 @@ static void vSpiSubTask(void *pvParameters)
     while (1) {
         if (spi_loopback && command_flag == 2) {
 			// TODO 10: prepare for transmission, load data into tx_frame
-            spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
+			spiSlaveTransfer(tx_frame, rx_frame, TRANSFER_SIZE_IN_BYTES);
 
-			
 			if (report_stream_active) {
 				// fill tx_buffer with control characters
                 memset(tx_frame, CHAR_DOLLAR, TRANSFER_SIZE_IN_BYTES);
@@ -322,7 +317,6 @@ static void vSpiSubTask(void *pvParameters)
 				// TODO 11: keep track of total received bytes over SPI and the current message byte count
                 total_bytes_received_over_spi++;
                 message_byte_count++;
-
                 updateRollingBuffer(rolling, current);
 
                 // if termination sequence is detected set report_stream_active = pdTRUE
@@ -338,7 +332,7 @@ static void vSpiSubTask(void *pvParameters)
 					
 					// TODO 13: generate report string. hint: use report_len = snprintf()
                     report_len = snprintf(report, sizeof(report),
-                    "\nNumber of bytes received over SPI:%d\nLast message byte count: %d\nTotal messages received: %d\n",
+             "\nNumber of bytes received over SPI:%d\nLast message byte count: %d\nTotal messages received: %d\n",
                     total_bytes_received_over_spi,
                     last_message_byte_count,
                     total_messages_received);
