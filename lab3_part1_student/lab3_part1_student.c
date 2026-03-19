@@ -1,11 +1,12 @@
 /******************************************************************************/
-/* ECE - 315 	: WINTER 2021
+/* ECE - 315 	: WINTER 2026
  * Created on 	: 07 August, 2021
  *
  * Created by	: Shyama M. Gandhi, Mazen Elbaz
  * Modified by	: Shyama M. Gandhi, Winter 2023
  * Modified by	: Antonio Andara Lara, Winter 2025
  * Modified by	: Antonio Andara Lara, Winter 2026
+ * Modified by  : Riley Whitford (whitfor1), Komaldeep Taggar (ktaggar), Winter 2026
  *
  * LAB 3: Implementation of SPI in Zynq-7000
  *------------------------------------------------------------------------------
@@ -41,6 +42,7 @@
 #include "xparameters.h"
 #include "xil_printf.h"
 #include "stdio.h"
+#include <projdefs.h>
 #include <stddef.h>
 #include "string.h"
 #include "my_uart.h"
@@ -158,14 +160,22 @@ static void vUartManagerTask(void *pvParameters)
     while (1) {
         if (report_flag) {
             // TODO 14: send $ until a $ is received
-			xQueueSend(spi_to_uart, &dummy, 0);
-            xil_printf("We made it to TODO14");
-            while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
-                if (spi_byte == CHAR_DOLLAR) {
-                    xil_printf("Report Flag is: %d", report_flag);
-                    report_flag = 0;
-                    break;
+            while (report_flag) {
+
+                for (int i = 0; i < TRANSFER_SIZE_IN_BYTES; i++) {
+                    xQueueSend(uart_to_spi, &dummy, 0);
                 }
+
+                while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
+                    if (spi_byte == CHAR_DOLLAR) {
+                        report_flag = 0;
+                        break;
+                    }
+
+                    uartWriteByte(spi_byte);
+                }
+                
+                vTaskDelay(1);
             }
         }
         
@@ -197,6 +207,10 @@ static void vUartManagerTask(void *pvParameters)
         }
 
         while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
+            if (spi_byte == CHAR_DOLLAR) {
+                report_flag = 0;
+                break;
+                }
             uartWriteByte(spi_byte);
         }
 
@@ -318,6 +332,7 @@ static void vSpiSubTask(void *pvParameters)
 				// TODO 11: keep track of total received bytes over SPI and the current message byte count
                 total_bytes_received_over_spi++;
                 message_byte_count++;
+
                 updateRollingBuffer(rolling, current);
 
                 // if termination sequence is detected set report_stream_active = pdTRUE
@@ -458,3 +473,4 @@ static void printMenu(void)
     xil_printf("  SPI loopback OFF   : SPI main echoes queue byte\r\n");
     xil_printf("  SPI loopback ON    : Real SPI0 -> SPI1 -> SPI0 loop\r\n");
 }
+
