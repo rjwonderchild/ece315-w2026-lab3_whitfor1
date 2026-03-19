@@ -51,7 +51,6 @@ void OLED_getPos(PmodOLED *InstancePtr, int *pxco, int *pyco);
 void drawTarget(u8 targetX, u8 targetY, u8 width, u8 length);
 
 
-
 const u8 orientation = 0x1; // Set up for Normal PmodOLED(false) vs normal
                             // Onboard OLED(true)
 const u8 invert = 0x0; // true = whitebackground/black letters
@@ -87,20 +86,20 @@ int main()
 	xil_printf("Initialization Complete, System Ready!\n");
 
 
-	xTaskCreate( keypadTask					/* The function that implements the task. */
-			   , "keypad task"				/* Text name for the task, provided to assist debugging only. */
-			   , configMINIMAL_STACK_SIZE	/* The stack allocated to the task. */
-			   , NULL						/* The task parameter is not used, so set to NULL. */
-			   , tskIDLE_PRIORITY			/* The task runs at the idle priority. */
+	xTaskCreate( keypadTask					// The function that implements the task.
+			   , "keypad task"				// Text name for the task, provided to assist debugging only.
+			   , configMINIMAL_STACK_SIZE	// The stack allocated to the task.
+			   , NULL						// The task parameter is not used, so set to NULL.
+			   , tskIDLE_PRIORITY			// The task runs at the idle priority.
 			   , NULL
 			   );
 
 
-	xTaskCreate( oledTask					/* The function that implements the task. */
-			   , "screen task"				/* Text name for the task, provided to assist debugging only. */
-			   , configMINIMAL_STACK_SIZE	/* The stack allocated to the task. */
-			   , NULL						/* The task parameter is not used, so set to NULL. */
-			   , tskIDLE_PRIORITY			/* The task runs at the idle priority. */
+	xTaskCreate( oledTask					// The function that implements the task.
+			   , "screen task"				// Text name for the task, provided to assist debugging only.
+			   , configMINIMAL_STACK_SIZE	// The stack allocated to the task. 
+			   , NULL						// The task parameter is not used, so set to NULL. 
+			   , tskIDLE_PRIORITY			// The task runs at the idle priority. 
 			   , NULL
 			   );
 
@@ -188,51 +187,6 @@ static void keypadTask( void *pvParameters )
 	  vTaskDelay(xDelay); // Scanning Delay
    }
 }
-
-/*
-void drawCrossHair(u8 xco, u8 yco)
-{
-	OLED_MoveTo(&oledDevice, xco, 0);
-	OLED_DrawLineTo(&oledDevice, xco, OledRowMax - 1);
-	OLED_MoveTo(&oledDevice, 0, yco);
-	OLED_DrawLineTo(&oledDevice, OledColMax - 1, yco);
-} */
-
-/*
-void drawTarget(u8 targetx, u8 targety, u8 width, u8 length)
-{
-	if (targetx > OledColMax - 1){
-		targetx = 0;
-	}
-	if (targety > OledRowMax - 1){
-		targety = 0;
-	}
-	if (targetx + length > OledColMax - 1){
-		targetLength = OledColMax - 1;
-	}
-	if (targety + width > OledRowMax - 1){
-		targetWidth = OledRowMax - 1;
-	}
-	OLED_MoveTo(&oledDevice, targetx, targety);
-	OLED_RectangleTo(&oledDevice, targetx + length, targety + width);
-} */
-
-/*
-void checkShot(void)
-{
-	if (aimx >= targetx && aimx < (targetx + targetLength) && aimy >= targety && aimy < (targety + targetWidth) ){
-		score++;
-		xil_printf("hit!, score: %d\n", score);
-		OLED_ClearBuffer(&oledDevice);
-		targetx = rand() % OledColMax;
-		targety = rand() % OledRowMax;
-		targetLength = rand() % 20;
-		targetWidth = rand() % 10;
-	} else {
-		lives--;
-		xil_printf("missed, lives: %d\n", lives);
-	}
-} */
 
 // -------------------------
 // Fast Random Pixel Dissolve
