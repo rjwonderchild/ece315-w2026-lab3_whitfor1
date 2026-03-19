@@ -27,7 +27,6 @@
 #define KYPD_BASE_ADDR XPAR_GPIO_KEYPAD_BASEADDR
 #define BTN_CHANNEL    1
 
-
 #define FRAME_DELAY 50000
 
 // keypad key table
@@ -235,17 +234,44 @@ void checkShot(void)
 	}
 } */
 
-/*
-void getName() {
+// -------------------------
+// Fast Random Pixel Dissolve
+// -------------------------
 
-} */
+static u32 lfsrFast = 0xA341316C; // pseudo-random seed
 
-void addChar(char *s, char c) {
-    while (*s++);
+// Simple pseudo-random generator (8-bit)
+static u8 nextNoiseBitFast(void) {
+    lfsrFast ^= lfsrFast << 13;
+    lfsrFast ^= lfsrFast >> 17;
+    lfsrFast ^= lfsrFast << 5;
+    return (u8)(lfsrFast & 0xFF);
+}
 
-    *(s-1) = c;
+// Fast dissolve function
+static void dissolveScreenFast(void) {
+    int i, j;
+    int x, y;
 
-    *s = '\0';
+    // Clear a lot of pixels quickly
+    for (i = 0; i < 200; i++) {           // outer loop controls iterations
+        for (j = 0; j < 110; j++) {         // erase 100 pixels per iteration
+            x = nextNoiseBitFast() % OledColMax;
+            y = nextNoiseBitFast() % OledRowMax;
+
+            OLED_SetDrawColor(&oledDevice, 0); // set pixel off
+            OLED_MoveTo(&oledDevice, x, y);
+            OLED_DrawPixel(&oledDevice);
+        }
+
+        // Update the screen periodically to animate
+        OLED_Update(&oledDevice);
+
+        // Tiny delay to let FreeRTOS run other tasks (optional)
+        vTaskDelay(1);
+    }
+
+    OLED_Update(&oledDevice); // final update to ensure all pixels cleared
 }
 
 static void oledTask( void *pvParameters )
@@ -259,91 +285,79 @@ static void oledTask( void *pvParameters )
 
     // Variables needed for the title card and transition
     int titleFlag = 1;
-    char titleCard[256] = "The Lord of the Rings";
-    int titleCardOver = 0;
-    int titleCardTransition = 0;
     
     // Variables needed for the story setting information
-    char storySettingToDisplay[256] = "";
-    char storySettingText[256] = "This is a story of riddles...          Insert Text Here";
-    int storyTextOver;
-    int storySettingTransition;
+    int storyCardFlag;
 
 	while(1){
         buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
         if (titleFlag) {
             OLED_ClearBuffer(&oledDevice);
             OLED_SetCursor(&oledDevice, 0, 1);
-            OLED_PutString(&oledDevice, titleCard);
+            OLED_PutString(&oledDevice, "The Lord of the Rings");
             OLED_Update(&oledDevice);
 
+            vTaskDelay(1500);
+
+            dissolveScreenFast();
+            
             titleFlag = 0;
-            // Delete this break once it works.
-            //break;
+            storyCardFlag = 1;
         }
 
-        /*
-        if (!titleCardOver && titleCardTransition < 71) {
+        if (storyCardFlag) {
             OLED_ClearBuffer(&oledDevice);
-			OLED_SetCursor(&oledDevice, 0, 1);
-            addChar(titleCard, ' ');
-			OLED_PutString(&oledDevice, titleCard);
-			OLED_Update(&oledDevice);
-            titleCardTransition++;
-            vTaskDelay(100);
+            OLED_SetCursor(&oledDevice, 0, 1);
+            OLED_PutString(&oledDevice, "Where am I?...");
+            OLED_Update(&oledDevice);
 
-            if (titleCardTransition == 70) {
-                titleCardOver = 1;
-            }
-        } */
+            vTaskDelay(1500);
+            dissolveScreenFast();
 
-        /*
-        if (titleCardOver && !storyTextOver ) {
+            OLED_ClearBuffer(&oledDevice);
+            OLED_SetCursor(&oledDevice, 0, 1);
+            OLED_PutString(&oledDevice, "Who am I?");
+            OLED_Update(&oledDevice);
 
-        } */
+            vTaskDelay(1500);
+            dissolveScreenFast();
 
-        /*
-		buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-		if (lives == 0){
-			score = 0;
-			aimx = 0;
-			aimy = 0;
-			OLED_ClearBuffer(&oledDevice);
-			OLED_SetCursor(&oledDevice, 0, 1);
-			OLED_PutString(&oledDevice, "Game Over");
-			OLED_Update(&oledDevice);
-		} else {
-			if (buttonVal == 0){
-				drawCrossHair(aimx, aimy);
-				drawTarget(targetx, targety, targetWidth, targetLength);
-				OLED_Update(&oledDevice);
-				usleep(FRAME_DELAY);
-				OLED_ClearBuffer(&oledDevice);
-			} else if (buttonVal == 2){
-				OLED_ClearBuffer(&oledDevice);
-				OLED_SetCursor(&oledDevice, 0, 0);
-				sprintf(temp, "score: %d", score);
-				OLED_PutString(&oledDevice, temp);
-				OLED_SetCursor(&oledDevice, 0, 2);
-				sprintf(temp, "lives: %d", lives);
-				OLED_PutString(&oledDevice, temp);
-				OLED_Update(&oledDevice);
-			} else if (buttonVal == 4){
-				OLED_ClearBuffer(&oledDevice);
-				OLED_SetCursor(&oledDevice, 0, 1);
-				u32 ticks = xTaskGetTickCount();
-				ticks = ticks / 100;
-				sprintf(temp, "time: %lu", ticks);
-				OLED_PutString(&oledDevice, temp);
-				OLED_Update(&oledDevice);
-			}
-		}
-        */
+            OLED_ClearBuffer(&oledDevice);
+            OLED_SetCursor(&oledDevice, 0, 1);
+            OLED_PutString(&oledDevice, "Ah... I'm Bilbo");
+            OLED_Update(&oledDevice);
+
+            vTaskDelay(1500);
+            dissolveScreenFast();
+
+            OLED_ClearBuffer(&oledDevice);
+            OLED_SetCursor(&oledDevice, 0, 1);
+            OLED_PutString(&oledDevice, "Its dark in here");
+            OLED_Update(&oledDevice);
+
+            vTaskDelay(1500);
+            dissolveScreenFast();
+
+            OLED_ClearBuffer(&oledDevice);
+            OLED_SetCursor(&oledDevice, 0, 1);
+            OLED_PutString(&oledDevice, "There must be a way out of here");
+            OLED_Update(&oledDevice);
+
+            vTaskDelay(2500);
+            dissolveScreenFast();
+
+            OLED_ClearBuffer(&oledDevice);
+            OLED_SetCursor(&oledDevice, 0, 1);
+            OLED_PutString(&oledDevice, "Is there something I can use to see?");
+            OLED_Update(&oledDevice);
+
+            storyCardFlag = 0;
+        }
 	}
 }
 
 
-static void buttonTask( void *pvParameters )
+static void buttonTask(void *pvParameters)
 {
 	u8 buttonVal = 0;
     u8 lastButtonVal = 0;
@@ -367,78 +381,3 @@ static void buttonTask( void *pvParameters )
 		vTaskDelay(10);
 	}
 }
-
-/*
-static void oledTask( void *pvParameters )
-{
-	u8 buttonVal = 0;
-	char temp[10];
-	xil_printf("UART and SPI opened for PmodOLED Demo\n");
-	OLED_SetDrawMode(&oledDevice, 0);
-	// Turn automatic updating off
-	OLED_SetCharUpdate(&oledDevice, 0);
-
-	while(1){
-		buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-		if (lives == 0){
-			score = 0;
-			aimx = 0;
-			aimy = 0;
-			OLED_ClearBuffer(&oledDevice);
-			OLED_SetCursor(&oledDevice, 0, 1);
-			OLED_PutString(&oledDevice, "Game Over");
-			OLED_Update(&oledDevice);
-		} else {
-			if (buttonVal == 0){
-				drawCrossHair(aimx, aimy);
-				drawTarget(targetx, targety, targetWidth, targetLength);
-				OLED_Update(&oledDevice);
-				usleep(FRAME_DELAY);
-				OLED_ClearBuffer(&oledDevice);
-			} else if (buttonVal == 2){
-				OLED_ClearBuffer(&oledDevice);
-				OLED_SetCursor(&oledDevice, 0, 0);
-				sprintf(temp, "score: %d", score);
-				OLED_PutString(&oledDevice, temp);
-				OLED_SetCursor(&oledDevice, 0, 2);
-				sprintf(temp, "lives: %d", lives);
-				OLED_PutString(&oledDevice, temp);
-				OLED_Update(&oledDevice);
-			} else if (buttonVal == 4){
-				OLED_ClearBuffer(&oledDevice);
-				OLED_SetCursor(&oledDevice, 0, 1);
-				u32 ticks = xTaskGetTickCount();
-				ticks = ticks / 100;
-				sprintf(temp, "time: %lu", ticks);
-				OLED_PutString(&oledDevice, temp);
-				OLED_Update(&oledDevice);
-			}
-		}
-	}
-}
-
-
-static void buttonTask( void *pvParameters )
-{
-	u8 buttonVal = 0;
-    u8 lastButtonVal = 0;
-
-	while(1){
-		buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-		
-        if (buttonVal == 1 && lastButtonVal == 0){
-            if (lives > 0) {
-			checkShot();
-            }
-		} else if (buttonVal == 1 && lives == 0){
-			xil_printf("game over, reset with BTN3\n");
-		} else if (buttonVal == 8 && lastButtonVal == 0){
-			xil_printf("reset\n");
-			lives = 3;
-			score = 0;
-		}
-
-        lastButtonVal = buttonVal;
-		vTaskDelay(10);
-	}
-} */
