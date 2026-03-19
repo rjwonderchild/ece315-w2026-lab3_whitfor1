@@ -159,9 +159,10 @@ static void vUartManagerTask(void *pvParameters)
         if (report_flag) {
             // TODO 14: send $ until a $ is received
 			xQueueSend(spi_to_uart, &dummy, 0);
-
+            xil_printf("We made it to TODO14");
             while (xQueueReceive(spi_to_uart, &spi_byte, 0)) {
                 if (spi_byte == CHAR_DOLLAR) {
+                    xil_printf("Report Flag is: %d", report_flag);
                     report_flag = 0;
                     break;
                 }
@@ -332,7 +333,7 @@ static void vSpiSubTask(void *pvParameters)
 					
 					// TODO 13: generate report string. hint: use report_len = snprintf()
                     report_len = snprintf(report, sizeof(report),
-             "\nNumber of bytes received over SPI:%d\nLast message byte count: %d\nTotal messages received: %d\n",
+                    "\nNumber of bytes received over SPI:%d\nLast message byte count: %d\nTotal messages received: %d\n",
                     total_bytes_received_over_spi,
                     last_message_byte_count,
                     total_messages_received);
