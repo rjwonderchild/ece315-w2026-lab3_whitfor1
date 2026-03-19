@@ -52,9 +52,9 @@ void drawTarget(u8 targetX, u8 targetY, u8 width, u8 length);
 
 
 
-const u8 orientation = 0x0; // Set up for Normal PmodOLED(false) vs normal
+const u8 orientation = 0x1; // Set up for Normal PmodOLED(false) vs normal
                             // Onboard OLED(true)
-const u8 invert = 0x1; // true = whitebackground/black letters
+const u8 invert = 0x0; // true = whitebackground/black letters
                        // false = black background /white letters
 u8 keypad_val = 'x';
 u8 size = 8, origin = 0;
@@ -156,7 +156,7 @@ static void keypadTask( void *pvParameters )
 
 	  last_status = status;
 	  keypad_val = new_key;
-	  if (keypad_val == '4'){
+	  if (keypad_val == '2'){
 		  flag = !flag;
 		  if(aimy > 0 && flag) {
 			  aimy-=1;
@@ -164,7 +164,7 @@ static void keypadTask( void *pvParameters )
 		  if(origin > 0 && flag){
 			  origin--;
 		  }
-	  } else if (keypad_val == '6'){
+	  } else if (keypad_val == '8'){
 		  flag = !flag;
 		  if(aimy < (OledRowMax - size - 1) && flag) {
 			  aimy+=1;
@@ -172,14 +172,14 @@ static void keypadTask( void *pvParameters )
 		  if(origin < (OledRowMax - size - 1) && flag) {
 			  origin++;
 		  }
-	  } else if (keypad_val == '2'){
+	  } else if (keypad_val == '6'){
 		  flag = !flag;
 		  if(aimx < (OledColMax - 1) && flag) {
 			  aimx+=1;
 		  }
 	  } else if (keypad_val == '5'){
 		  flag = !flag;
-	  } else if (keypad_val == '8'){
+	  } else if (keypad_val == '4'){
 		  flag = !flag;
 		  if(aimx > 0 && flag) {
 			  aimx-=1;
@@ -287,17 +287,24 @@ static void oledTask( void *pvParameters )
 static void buttonTask( void *pvParameters )
 {
 	u8 buttonVal = 0;
+    u8 lastButtonVal = 0;
+
 	while(1){
 		buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-		if (buttonVal == 1 && lives > 0){
+		
+        if (buttonVal == 1 && lastButtonVal == 0){
+            if (lives > 0) {
 			checkShot();
+            }
 		} else if (buttonVal == 1 && lives == 0){
 			xil_printf("game over, reset with BTN3\n");
-		} else if (buttonVal == 8){
+		} else if (buttonVal == 8 && lastButtonVal == 0){
 			xil_printf("reset\n");
 			lives = 3;
 			score = 0;
 		}
+
+        lastButtonVal = buttonVal;
 		vTaskDelay(10);
 	}
 }
