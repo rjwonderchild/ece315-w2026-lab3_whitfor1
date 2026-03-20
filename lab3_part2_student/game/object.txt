@@ -25,7 +25,6 @@ typedef struct object {
 } OBJECT;
 
 extern OBJECT objs[];
-
 - gossipEWNS
      tags        "east", "west", "north", "south"
      gossip      "It's just a compass direction."
