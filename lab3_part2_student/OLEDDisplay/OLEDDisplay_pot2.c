@@ -269,22 +269,25 @@ static void buttonTask(void *pvParameters)
 {
     u8 buttonVal = 0;
 
-    while(1){
-        buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
+	if (buttonPressed && gRgbUnlocked)
+	{
+		
+    	while(1){
+        	buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
 
-        if (buttonVal == 1){
-            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
-        }
-        else if (buttonVal == 2){
-            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
-        }
-        else if (buttonVal == 4){
-            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_MAGENTA);
-        }
-        else if (buttonVal == 8){
-            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_WHITE);
-        }
-
+        	if (buttonVal == 1){
+            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
+        	}
+        	else if (buttonVal == 2){
+            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
+        	}
+        	else if (buttonVal == 4){
+            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_MAGENTA);
+        	}
+        	else if (buttonVal == 8){
+            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_WHITE);
+        	}
+		}
         vTaskDelay(10);
     }
 }
