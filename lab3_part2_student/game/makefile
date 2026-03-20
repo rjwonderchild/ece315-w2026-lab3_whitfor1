@@ -1,11 +1,16 @@
-all: success.txt src.zip map.png
+all: lilcave success.txt src.zip map.png
 
-C = object.c misc.c match.c noun.c toggle.c location.c move.c reach.c inventory.c inventory2.c openclose.c onoff.c parsexec.c main.c
-H = object.h misc.h match.h noun.h toggle.h location.h move.h reach.h inventory.h inventory2.h openclose.h onoff.h parsexec.h
+C = object.c misc.c match.c noun.c toggle.c location.c move.c reach.c inventory.c inventory2.c openclose.c onoff.c talk.c expand.c parsexec.c main.c
+H = object.h misc.h match.h noun.h toggle.h location.h move.h reach.h inventory.h inventory2.h openclose.h onoff.h talk.h expand.h parsexec.h
 
-success.txt: lilcave testscript.txt baseline.txt
-	./test.sh
+success.txt: lilcave.testable testscript.txt baseline.txt
+	./lilcave.testable testscript.txt > transcript.txt
+	gcov *.gcda | tee codecoverage.txt | tail -n1
+	cmp baseline.txt transcript.txt
 	mv -f transcript.txt $@
+
+lilcave.testable: $(C) $(H)
+	gcc --coverage $(C) -o $@
 
 lilcave: $(C) $(H)
 	gcc -Wall -Wextra -Wpedantic -Werror $(C) -o $@
@@ -27,4 +32,4 @@ src.zip: $(C) $(H) object.txt makefile testscript.txt baseline.txt
 	zip -rq $@ $^
 
 clean:
-	$(RM) object.c object.h lilcave map.gv map.png transcript.txt success.txt src.zip
+	$(RM) object.c object.h lilcave map.gv map.png lilcave.testable *.gcda *.gcno *.gcov codecoverage.txt transcript.txt success.txt src.zip

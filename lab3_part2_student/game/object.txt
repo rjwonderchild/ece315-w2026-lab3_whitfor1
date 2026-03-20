@@ -13,6 +13,7 @@ typedef struct object {
    const char    *details;
    const char    *contents;
    const char    *textGo;
+   const char    *gossip;
    int            weight;
    int            capacity;
    int            health;
@@ -25,10 +26,15 @@ typedef struct object {
 
 extern OBJECT objs[];
 
+- gossipEWNS
+     tags        "east", "west", "north", "south"
+     gossip      "It's just a compass direction."
+
 - field
      description "an open field"
      tags        "field"
      details     "The field is a nice and quiet place under a clear blue sky."
+     gossip      "A lot of tourists go there."
      capacity    9999
      light       100
 
@@ -36,6 +42,7 @@ extern OBJECT objs[];
      description "a little cave"
      tags        "cave"
      details     "The cave is just a cold, damp, rocky chamber."
+     gossip      "It's dark in there; bring a lamp!"
      capacity    9999
 
 - silver
@@ -43,6 +50,7 @@ extern OBJECT objs[];
      tags        "silver", "coin", "silver coin"
      location    field
      details     "The coin has an eagle on the obverse."
+     gossip      "Money makes the world go round..."
      weight      1
 
 - gold
@@ -50,6 +58,7 @@ extern OBJECT objs[];
      tags        "gold", "coin", "gold coin"
      location    openBox
      details     "The shiny coin seems to be a rare and priceless artefact."
+     gossip      "Money makes the world go round..."
      weight      1
 
 - guard
@@ -57,6 +66,7 @@ extern OBJECT objs[];
      tags        "guard", "burly guard"
      location    field
      details     "The guard is a really big fellow."
+     gossip      "Easy to bribe..."
      contents    "He has"
      health      100
      capacity    20
@@ -66,6 +76,7 @@ extern OBJECT objs[];
      tags        "yourself"
      location    field
      details     "You would need a mirror to look at yourself."
+     gossip      "You're not from around here, are you?"
      contents    "You have"
      health      100
      capacity    20
@@ -105,6 +116,7 @@ extern OBJECT objs[];
      location    field
      details     "The field is surrounded by trees and undergrowth."
      textGo      "Dense forest is blocking the way."
+     gossip      "You cannot go there, it is impenetrable."
 
 - wallCave
      description "solid rock all around"
@@ -117,6 +129,7 @@ extern OBJECT objs[];
      description "a backroom"
      tags        "backroom"
      details     "The room is dusty and messy."
+     gossip      "There is something of value to be found there."
      capacity    9999
 
 - wallBackroom
@@ -168,6 +181,7 @@ extern OBJECT objs[];
      description "a wooden box"
      tags        "box", "wooden box"
      details     "The box is open."
+     gossip      "You need a key to open it."
      weight      5
      capacity    10
      open        isAlreadyOpen
@@ -201,6 +215,7 @@ extern OBJECT objs[];
      tags        "key", "tiny key"
      location    cave
      details     "The key is really small and shiny."
+     gossip      "A small key opens a small lock."
      weight      1
 
 - lampOff
@@ -208,6 +223,7 @@ extern OBJECT objs[];
      tags        "lamp"
      location    field
      details     "The lamp is off."
+     gossip      "Essential in dark areas."
      weight      5
 
 - lampOn

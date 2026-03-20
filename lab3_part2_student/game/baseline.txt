@@ -7,63 +7,32 @@ a cave entrance to the east
 dense forest all around
 a lamp
 
---> get lamp
-You pick up a lamp.
+--> talk with guard
+I don't understand what you want to talk about.
 
---> get coin
-You pick up a silver coin.
+--> talk about coin
+You hear a burly guard say: 'Money makes the world go round...'
 
---> give coin
-You give a silver coin to a burly guard.
+--> talk with guard about forest
+You hear a burly guard say: 'You cannot go there, it is impenetrable.'
 
---> go cave
-You walk into the cave.
+--> talk about cave
+You hear a burly guard say: 'It's dark in there; bring a lamp!'
 
-It is very dark in here.
-You see:
-an exit to the west
+--> talk about east
+You hear a burly guard say: 'It's just a compass direction.'
 
---> get key
-It's too dark.
+--> talk about yourself
+You hear a burly guard say: 'You're not from around here, are you?'
 
---> open door
-It's too dark.
+--> talk about guard
+You hear a burly guard say: 'I don't want to talk about myself.'
 
---> go south
-It's too dark.
+--> talk about hamburgers
+I don't understand what you want to talk about.
 
---> turn lamp on
-You turn on a lamp.
-
-You are in a little cave.
-You see:
-an exit to the west
-solid rock all around
-a closed door to the south
-a tiny key
-
---> look around
-You are in a little cave.
-You see:
-an exit to the west
-solid rock all around
-a closed door to the south
-a tiny key
-
---> get key
-You pick up a tiny key.
-
---> open door
-You open a closed door to the south.
-
---> go south
-You walk through the door into a backroom.
-
-You are in a backroom.
-You see:
-solid rock all around
-an open door to the north
-a wooden box
+--> talk
+I don't understand what you want to talk about.
 
 --> quit
 

@@ -9,6 +9,7 @@
 #include "inventory2.h"
 #include "openclose.h"
 #include "onoff.h"
+#include "talk.h"
 
 typedef struct
 {
@@ -24,12 +25,9 @@ static bool executeQuit(void)
 static bool executeNoMatch(void)
 {
    const char *src = *params;
-   if (*src != '\0')
-   {
-      printf("I don't know how to '");
-      while (*src != '\0' && !isspace(*src)) putchar(*src++);
-      printf("'.\n");
-   }
+   int len;
+   for (len = 0; src[len] != '\0' && !isspace(src[len]); len++);
+   if (len > 0) printf("I don't know how to '%.*s'.\n", len, src);
    return true;
 }
 
@@ -63,6 +61,10 @@ bool parseAndExecute(const char *input)
       { "turn off A"          , executeTurnOff    },
       { "turn A on"           , executeTurnOn     },
       { "turn A off"          , executeTurnOff    },
+      { "talk with B about A" , executeTalkTo     },
+      { "talk about A with B" , executeTalkTo     },
+      { "talk about A"        , executeTalk       },
+      { "talk A"              , executeTalk       },
       { "A"                   , executeNoMatch    }
    };
    const COMMAND *cmd;
