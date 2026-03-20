@@ -30,158 +30,334 @@ extern OBJECT objs[];
      tags        "east", "west", "north", "south"
      gossip      "It's just a compass direction."
 
-- field
-     description "an open field"
-     tags        "field"
-     details     "The field is a nice and quiet place under a clear blue sky."
-     gossip      "A lot of tourists go there."
+- tunnel1
+     description "the mouth of a dark tunnel"
+     tags        "tunnel", "mouth", "entrance", "beginning"
+     details     "A cramped stone passage bends into the roots of the Misty Mountains. Something glints nearby."
+     gossip      "The mountain swallows all light."
+     capacity    9999
+     light       20
+
+- tunnel2
+     description "a black tunnel running north and south"
+     tags        "tunnel", "passage", "north", "south"
+     details     "Cold stone presses in on both sides. Without light, the way ahead is impossible to judge."
+     gossip      "I will need Sting's light to go deeper."
+     capacity    9999
+     light       0
+
+- tunnel3
+     description "a narrow tunnel with something glimmering in the dark"
+     tags        "tunnel", "passage", "north", "south", "glimmer"
+     details     "The air is clammy and still. In the darkness, something small and golden lies on the ground."
+     gossip      "Something precious is here."
+     capacity    9999
+     light       0
+
+- laketunnel
+     description "a tunnel sloping toward water"
+     tags        "tunnel", "passage", "north", "south", "lake"
+     details     "The tunnel slopes downward. You hear the faint slap of water ahead."
+     gossip      "The air smells wet and ancient."
+     capacity    9999
+     light       0
+
+- undergroundLake
+     description "an underground lake"
+     tags        "lake", "underground lake", "water"
+     details     "Black water laps quietly against the stone. The darkness over the lake feels alive."
+     gossip      "Something lives on the water."
+     capacity    9999
+     light       0
+
+- gollumsisland
+     description "a low island in the middle of the lake"
+     tags        "island", "rock island", "lake island", "rock"
+     details     "A slick island of stone rises from the black lake. Bones and scraps lie scattered here."
+     gossip      "Someone has lived here for a very long time."
+     capacity    9999
+     light       0
+
+- riddlerock
+     description "the riddle rock"
+     tags        "riddle rock", "rock", "polished rock", "riddle", "stone"
+     details     "A broad polished stone sits like a crude throne. This is plainly where Gollum plays his game."
+     gossip      "A court for riddles and bargains."
+     capacity    9999
+     light       0
+
+- escapetunnel
+     description "the tunnel leading out of the mountain"
+     tags        "tunnel", "exit", "escape", "escape route"
+     details     "A long cleft in the rock carries a faint breath of fresh air from the outside world."
+     gossip      "Freedom lies that way."
      capacity    9999
      light       100
 
-- cave
-     description "a little cave"
-     tags        "cave"
-     details     "The cave is just a cold, damp, rocky chamber."
-     gossip      "It's dark in there; bring a lamp!"
-     capacity    9999
+- riddleSolvedToken
+     description "a hidden token"
+     tags        "token"
+     details     "This object should never be seen."
+     gossip      "Hidden."
+     weight      0
 
-- silver
-     description "a silver coin"
-     tags        "silver", "coin", "silver coin"
-     location    field
-     details     "The coin has an eagle on the obverse."
-     gossip      "Money makes the world go round..."
+- thering
+     description "a gold ring"
+     tags        "ring", "gold ring", "gold", "precious", "my precious", "shiny"
+     location    tunnel3
+     details     "A plain golden ring. It looks harmless, but it draws the eye at once."
+     gossip      "It feels strangely important."
      weight      1
 
-- gold
-     description "a gold coin"
-     tags        "gold", "coin", "gold coin"
-     location    openBox
-     details     "The shiny coin seems to be a rare and priceless artefact."
-     gossip      "Money makes the world go round..."
-     weight      1
-
-- guard
-     description "a burly guard"
-     tags        "guard", "burly guard"
-     location    field
-     details     "The guard is a really big fellow."
-     gossip      "Easy to bribe..."
+- gollum
+     condition   { return thering->location == player && riddleSolvedToken->location != player; }
+     description "Gollum"
+     tags        "gollum", "creature", "riddle master", "monster"
+     location    riddlerock
+     details     "A pale, wiry creature crouches on the stone, watching with hungry eyes."
+     gossip      "If I want to leave, I must beat him at his own game."
      contents    "He has"
      health      100
      capacity    20
 
 - player
      description "yourself"
-     tags        "yourself"
-     location    field
-     details     "You would need a mirror to look at yourself."
-     gossip      "You're not from around here, are you?"
+     tags        "yourself", "bilbo", "hobbit"
+     location    tunnel1
+     details     "A bewildered hobbit far beneath the Misty Mountains."
+     gossip      "Going on an adventure, they said."
      contents    "You have"
      health      100
      capacity    20
 
-- intoCave
-     condition   { return guard->health == 0 || silver->location == guard; }
-     description "a cave entrance to the east"
-     tags        "east", "entrance"
-     location    field
-     destination cave
-     details     "The entrance is just a narrow opening in a small outcrop."
-     textGo      "You walk into the cave."
+- lampOff
+     description "Sting"
+     tags        "sting", "sword", "blade", "light", "glow"
+     location    tunnel1
+     details     "An Elvish blade. In the darkness of the tunnels, it can be used as your light."
+     gossip      "If I draw Sting, I can see."
+     weight      1
+     open        cannotBeOpened
+     close       cannotBeClosed
+     lock        cannotBeLocked
+     unlock      cannotBeUnlocked
+
+- lampOn
+     description "Sting"
+     tags        "sting", "sword", "blade", "light", "glow"
+     details     "Sting is drawn and shining with a cold blue light."
+     gossip      "Now I can see through the dark tunnels."
+     weight      1
+     light       100
+     open        cannotBeOpened
+     close       cannotBeClosed
+     lock        cannotBeLocked
+     unlock      cannotBeUnlocked
+
+- northFromTunnel1
+     description "a tunnel leading north"
+     tags        "north", "tunnel", "passage"
+     location    tunnel1
+     destination tunnel2
+     details     "The tunnel continues north into darkness."
+     textGo      "You move north into the tunnel."
      open        isAlreadyOpen
 
-- intoCaveBlocked
-     condition   { return guard->health > 0 && silver->location != guard; }
-     description "a cave entrance to the east"
-     tags        "east", "entrance"
-     location    field
-     prospect    cave
-     details     "The entrance is just a narrow opening in a small outcrop."
-     textGo      "The guard stops you from walking into the cave."
+- southFromTunnel2
+     description "a tunnel leading south"
+     tags        "south", "tunnel", "passage"
+     location    tunnel2
+     destination tunnel1
+     details     "The passage leads back toward the tunnel mouth."
+     textGo      "You head back toward the entrance."
      open        isAlreadyOpen
 
-- exitCave
-     description "an exit to the west"
-     tags        "west", "exit"
-     location    cave
-     destination field
-     details     "Sunlight pours in through an opening in the cave's wall."
-     textGo      "You walk out of the cave."
+- northFromTunnel2
+     condition   { return lampOn->location == player; }
+     description "a tunnel leading north"
+     tags        "north", "tunnel", "passage"
+     location    tunnel2
+     destination tunnel3
+     details     "With Sting's light, the way north becomes clear."
+     textGo      "You follow Sting's light deeper into the tunnel."
      open        isAlreadyOpen
 
-- wallField
-     description "dense forest all around"
-     tags        "west", "north", "south", "forest"
-     location    field
-     details     "The field is surrounded by trees and undergrowth."
-     textGo      "Dense forest is blocking the way."
-     gossip      "You cannot go there, it is impenetrable."
+- northFromTunnel2Blocked
+     condition   { return lampOn->location != player; }
+     description "a tunnel leading north"
+     tags        "north", "tunnel", "passage"
+     location    tunnel2
+     prospect    tunnel3
+     details     "The darkness ahead is absolute."
+     textGo      "Without Sting's light, the black tunnel ahead is impassable."
+     open        isAlreadyOpen
 
-- wallCave
-     description "solid rock all around"
-     tags        "east", "north", "rock"
-     location    cave
-     details     "Carved in stone is a secret password 'abccb'."
-     textGo      "Solid rock is blocking the way."
+- southFromTunnel3
+     description "a tunnel leading south"
+     tags        "south", "tunnel", "passage"
+     location    tunnel3
+     destination tunnel2
+     details     "The way south leads back through the darkness."
+     textGo      "You make your way south."
+     open        isAlreadyOpen
 
-- backroom
-     description "a backroom"
-     tags        "backroom"
-     details     "The room is dusty and messy."
-     gossip      "There is something of value to be found there."
-     capacity    9999
+- northFromTunnel3
+     condition   { return lampOn->location == player; }
+     description "a tunnel sloping north"
+     tags        "north", "tunnel", "passage", "lake"
+     location    tunnel3
+     destination laketunnel
+     details     "Sting's light catches damp walls sloping toward the sound of water."
+     textGo      "You move toward the sound of water."
+     open        isAlreadyOpen
 
-- wallBackroom
-     description "solid rock all around"
-     tags        "east", "west", "south", "rock"
-     location    backroom
-     details     "Trendy wallpaper covers the rock walls."
-     textGo      "Solid rock is blocking the way."
+- northFromTunnel3Blocked
+     condition   { return lampOn->location != player; }
+     description "a tunnel sloping north"
+     tags        "north", "tunnel", "passage", "lake"
+     location    tunnel3
+     prospect    laketunnel
+     details     "The way ahead vanishes into blackness."
+     textGo      "Without light, you dare not go farther."
+     open        isAlreadyOpen
+
+- southFromLakeTunnel
+     description "a tunnel leading south"
+     tags        "south", "tunnel", "passage"
+     location    laketunnel
+     destination tunnel3
+     details     "The tunnel rises back toward the upper passages."
+     textGo      "You head back up the tunnel."
+     open        isAlreadyOpen
+
+- northFromLakeTunnel
+     condition   { return lampOn->location == player; }
+     description "a tunnel opening onto a lake"
+     tags        "north", "tunnel", "passage", "lake"
+     location    laketunnel
+     destination undergroundLake
+     details     "Ahead, Sting's glow is swallowed by a vast dark lake."
+     textGo      "You step out beside the underground lake."
+     open        isAlreadyOpen
+
+- northFromLakeTunnelBlocked
+     condition   { return lampOn->location != player; }
+     description "a tunnel opening onto a lake"
+     tags        "north", "tunnel", "passage", "lake"
+     location    laketunnel
+     prospect    undergroundLake
+     details     "The tunnel opens into a larger darkness."
+     textGo      "Without Sting, the way ahead is too dark to trust."
+     open        isAlreadyOpen
+
+- southFromLake
+     description "the tunnel back south"
+     tags        "south", "tunnel", "passage"
+     location    undergroundLake
+     destination laketunnel
+     details     "The tunnel back south climbs away from the lake."
+     textGo      "You leave the lake behind."
+     open        isAlreadyOpen
+
+- eastFromLake
+     description "a way onto the island"
+     tags        "east", "island", "rock", "stone"
+     location    undergroundLake
+     destination gollumsisland
+     details     "A slick path of stone leads onto the island."
+     textGo      "You step carefully onto the island."
+     open        isAlreadyOpen
+
+- westFromIsland
+     description "the lake shore to the west"
+     tags        "west", "lake", "shore"
+     location    gollumsisland
+     destination undergroundLake
+     details     "The way back leads over wet stone to the lakeside."
+     textGo      "You leave the island."
+     open        isAlreadyOpen
+
+- eastFromIsland
+     description "the polished riddle rock"
+     tags        "east", "rock", "riddle rock", "riddle"
+     location    gollumsisland
+     destination riddlerock
+     details     "A smooth stone lies farther east, worn by use."
+     textGo      "You step onto the polished riddle rock."
+     open        isAlreadyOpen
+
+- westFromRock
+     condition   { return thering->location != player || riddleSolvedToken->location == player; }
+     description "the way back to the island"
+     tags        "west", "island", "back"
+     location    riddlerock
+     destination gollumsisland
+     details     "The island lies back to the west."
+     textGo      "You step back from the riddle rock."
+     open        isAlreadyOpen
+
+- westFromRockBlocked
+     condition   { return thering->location == player && riddleSolvedToken->location != player; }
+     description "the way back to the island"
+     tags        "west", "island", "back"
+     location    riddlerock
+     prospect    gollumsisland
+     details     "Gollum watches every move from the edge of the rock."
+     textGo      "Gollum bars your way. You will not leave until the riddle game is finished."
+     open        isAlreadyOpen
+
+- eastToEscape
+     condition   { return riddleSolvedToken->location == player; }
+     description "the escape tunnel to the east"
+     tags        "east", "tunnel", "escape", "exit"
+     location    riddlerock
+     destination escapetunnel
+     details     "Now that the game is won, the way out lies open."
+     textGo      "You slip into the escape tunnel."
+     open        isAlreadyOpen
+
+- eastToEscapeBlocked
+     condition   { return riddleSolvedToken->location != player; }
+     description "the escape tunnel to the east"
+     tags        "east", "tunnel", "escape", "exit"
+     location    riddlerock
+     prospect    escapetunnel
+     details     "The way out is here, but not yet yours."
+     textGo      "You cannot take the escape tunnel until the riddle game is complete."
+     open        isAlreadyOpen
 
 - openDoorToBackroom
-     description "an open door to the south"
-     tags        "south", "door", "doorway"
-     destination backroom
-     details     "The door is open."
-     textGo      "You walk through the door into a backroom."
+     description "an unused door"
+     tags        "unused", "door"
+     details     "Compatibility object not used in this story."
      open        isAlreadyOpen
      close       toggleDoorToBackroom
 
 - closedDoorToBackroom
-     description "a closed door to the south"
-     tags        "south", "door", "doorway"
-     location    cave
-     prospect    backroom
-     details     "The door is closed."
-     textGo      "The door is closed."
+     description "an unused door"
+     tags        "unused", "door"
+     details     "Compatibility object not used in this story."
      open        toggleDoorToBackroom
      close       isAlreadyClosed
 
 - openDoorToCave
-     description "an open door to the north"
-     tags        "north", "door", "doorway"
-     destination cave
-     details     "The door is open."
-     textGo      "You walk through the door into the cave."
+     description "an unused door"
+     tags        "unused", "door"
+     details     "Compatibility object not used in this story."
      open        isAlreadyOpen
      close       toggleDoorToCave
 
 - closedDoorToCave
-     description "a closed door to the north"
-     tags        "north", "door", "doorway"
-     location    backroom
-     prospect    cave
-     details     "The door is closed."
-     textGo      "The door is closed."
+     description "an unused door"
+     tags        "unused", "door"
+     details     "Compatibility object not used in this story."
      open        toggleDoorToCave
      close       isAlreadyClosed
 
 - openBox
-     description "a wooden box"
-     tags        "box", "wooden box"
-     details     "The box is open."
-     gossip      "You need a key to open it."
+     description "an unused box"
+     tags        "unused", "box"
+     details     "Compatibility object not used in this story."
      weight      5
      capacity    10
      open        isAlreadyOpen
@@ -190,9 +366,9 @@ extern OBJECT objs[];
      unlock      isAlreadyOpen
 
 - closedBox
-     description "a wooden box"
-     tags        "box", "wooden box"
-     details     "The box is closed."
+     description "an unused box"
+     tags        "unused", "box"
+     details     "Compatibility object not used in this story."
      weight      5
      open        toggleBox
      close       isAlreadyClosed
@@ -200,10 +376,9 @@ extern OBJECT objs[];
      unlock      isAlreadyUnlocked
 
 - lockedBox
-     description "a wooden box"
-     tags        "box", "wooden box"
-     location    backroom
-     details     "The box is closed."
+     description "an unused box"
+     tags        "unused", "box"
+     details     "Compatibility object not used in this story."
      weight      5
      open        isStillLocked
      close       isAlreadyClosed
@@ -211,24 +386,7 @@ extern OBJECT objs[];
      unlock      toggleBoxLock
 
 - keyForBox
-     description "a tiny key"
-     tags        "key", "tiny key"
-     location    cave
-     details     "The key is really small and shiny."
-     gossip      "A small key opens a small lock."
+     description "an unused key"
+     tags        "unused", "key"
+     details     "Compatibility object not used in this story."
      weight      1
-
-- lampOff
-     description "a lamp"
-     tags        "lamp"
-     location    field
-     details     "The lamp is off."
-     gossip      "Essential in dark areas."
-     weight      5
-
-- lampOn
-     description "a lamp"
-     tags        "lamp"
-     details     "The lamp is on."
-     weight      5
-     light       100
