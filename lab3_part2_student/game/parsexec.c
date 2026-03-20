@@ -1,6 +1,5 @@
 #include <ctype.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "misc.h"
 #include "match.h"
@@ -10,6 +9,7 @@
 #include "openclose.h"
 #include "onoff.h"
 #include "talk.h"
+#include "game_io.h"
 
 typedef struct
 {
@@ -26,8 +26,14 @@ static bool executeNoMatch(void)
 {
    const char *src = *params;
    int len;
-   for (len = 0; src[len] != '\0' && !isspace(src[len]); len++);
-   if (len > 0) printf("I don't know how to '%.*s'.\n", len, src);
+
+   for (len = 0; src[len] != '\0' && !isspace((unsigned char)src[len]); len++);
+
+   if (len > 0)
+   {
+      GameIO_Printf("I don't know how to '%.*s'.\n", len, src);
+   }
+
    return true;
 }
 
@@ -67,7 +73,13 @@ bool parseAndExecute(const char *input)
       { "talk A"              , executeTalk       },
       { "A"                   , executeNoMatch    }
    };
+
    const COMMAND *cmd;
-   for (cmd = commands; !matchCommand(input, cmd->pattern); cmd++);
+
+   for (cmd = commands; !matchCommand(input, cmd->pattern); cmd++)
+   {
+      /* keep scanning until a pattern matches */
+   }
+
    return (*cmd->function)();
 }

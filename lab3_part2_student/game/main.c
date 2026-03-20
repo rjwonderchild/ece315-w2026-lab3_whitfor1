@@ -1,58 +1,112 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include "expand.h"
 #include "parsexec.h"
+#include "game_io.h"
+#include "story.h"
 
 static char input[100] = "look around";
+static bool gameRunning = true;
 
-static bool getFromFP(FILE *fp)
+static void normalizeInput(char *text)
 {
-   bool ok = fgets(input, sizeof input, fp) != NULL;
-   if (ok) input[strcspn(input, "\n")] = '\0';
-   return ok;
+   size_t len;
+
+   if (text == NULL)
+   {
+      return;
+   }
+
+   len = strcspn(text, "\r\n");
+   text[len] = '\0';
 }
 
-static bool getInput(const char *filename)
+void gameInit(void)
 {
-   static FILE *fp = NULL;
-   bool ok;
-   if (fp == NULL)
-   {
-      if (filename != NULL) fp = fopen(filename, "rt");
-      if (fp == NULL) fp = stdin;
-   }
-   else if (fp == stdin && filename != NULL)
-   {
-      FILE *out = fopen(filename, "at");
-      if (out != NULL)
-      {
-         fprintf(out, "%s\n", input);
-         fclose(out);
-      }
-   }
-   printf("\n--> ");
-   ok = getFromFP(fp);
-   if (fp != stdin)
-   {
-      if (ok)
-      {
-         printf("%s\n", input);
-      }
-      else
-      {
-         fclose(fp);
-         ok = getFromFP(fp = stdin);
-      }
-   }
-   return ok;
+   gameRunning = true;
+   strncpy(input, "look around", sizeof(input) - 1);
+   input[sizeof(input) - 1] = '\0';
+
+   GameIO_PutString("Welcome to Little Cave Adventure.\n");
 }
 
-int main(int argc, char *argv[])
+void gameShowIntro(PmodOLED *oled)
 {
-   (void)argc;
-   printf("Welcome to Little Cave Adventure.\n");
-   while (parseAndExecute(expand(input, sizeof input)) && getInput(argv[1]));
-   printf("\nBye!\n");
+   if (oled != NULL)
+   {
+      showTitleScreen(oled);
+      showStoryCards(oled);
+   }
+}
+
+bool gameProcessCommand(const char *command)
+{
+   if (!gameRunning)
+   {
+      return false;
+   }
+
+   if (command == NULL)
+   {
+      return true;
+   }
+
+   strncpy(input, command, sizeof(input) - 1);
+   input[sizeof(input) - 1] = '\0';
+   normalizeInput(input);
+
+   if (input[0] == '\0')
+   {
+      return true;
+   }
+
+   gameRunning = parseAndExecute(expand(input, sizeof(input)));
+
+   if (!gameRunning)
+   {
+      GameIO_PutString("\nBye!\n");
+   }
+
+   return gameRunning;
+}
+
+bool gamePollAndProcess(void)
+{
+   if (!gameRunning)
+   {
+      return false;
+   }
+
+   GameIO_Prompt();
+
+   if (GameIO_GetLine(input, sizeof(input)))
+   {
+      normalizeInput(input);
+
+      if (input[0] != '\0')
+      {
+         gameRunning = parseAndExecute(expand(input, sizeof(input)));
+
+         if (!gameRunning)
+         {
+            GameIO_PutString("\nBye!\n");
+         }
+      }
+   }
+
+   return gameRunning;
+}
+
+#ifdef DESKTOP_BUILD
+int main(void)
+{
+   gameInit();
+
+   while (gamePollAndProcess())
+   {
+      /* desktop polling loop */
+   }
+
    return 0;
 }
+#endif

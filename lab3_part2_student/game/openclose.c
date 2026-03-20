@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "match.h"
 #include "reach.h"

@@ -1,54 +1,55 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "misc.h"
 #include "match.h"
-#include "noun.h"
 #include "reach.h"
-
-static void talk(const char *about, OBJECT *to)
-{
-   OBJECT *topic = getTopic(about);
-   if (topic == NULL)
-   {
-      printf("I don't understand what you want to talk about.\n");
-   }
-   else
-   {
-      printf("You hear %s say: '%s'\n",
-             to->description,
-             topic == to ? "I don't want to talk about myself."
-                         : topic->gossip);
-   }
-}
+#include "talk.h"
+#include "game_io.h"
 
 bool executeTalk(void)
 {
-   OBJECT *to = actorHere();
-   if (to != NULL)
+   if (*noun == '\0')
    {
-      talk(params[0], to);
+      GameIO_PutString("Talk about what?\n");
+      return true;
    }
-   else
-   {
-      printf("There is nobody here to talk to.\n");
-   }
-   return true;
+
+   return executeTalkTo();
 }
 
 bool executeTalkTo(void)
 {
-   OBJECT *to = reachableObject("who to talk to", params[1]);
-   if (to != NULL)
+   OBJECT *obj = NULL;
+
+   if (*noun == '\0')
    {
-      if (to->health > 0)
+      GameIO_PutString("Talk about what?\n");
+      return true;
+   }
+
+   if (*secondnoun == '\0')
+   {
+      obj = actorHere();
+      if (obj == NULL)
       {
-         talk(params[0], to);
-      }
-      else
-      {
-         printf("There is no response from %s.\n", to->description);
+         GameIO_PutString("Talk with whom?\n");
+         return true;
       }
    }
-   return true;
+   else
+   {
+      obj = reachableObject("talk to", secondnoun);
+      if (obj == NULL)
+      {
+         return true;
+      }
+   }
+
+   if (obj->talk == NULL)
+   {
+      GameIO_Printf("You can't talk to %s.\n", obj->description);
+      return true;
+   }
+
+   return obj->talk();
 }

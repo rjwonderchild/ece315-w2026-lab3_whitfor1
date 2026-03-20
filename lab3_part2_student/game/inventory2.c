@@ -1,10 +1,10 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "match.h"
 #include "noun.h"
 #include "move.h"
 #include "reach.h"
+#include "game_io.h"
 
 bool executeGetFrom(void)
 {
@@ -13,7 +13,7 @@ bool executeGetFrom(void)
    {
       if (from->health > 0)
       {
-         printf("You should ask %s nicely.\n", from->description);
+         GameIO_Printf("You should ask %s nicely.\n", from->description);
       }
       else
       {
@@ -33,7 +33,7 @@ bool executePutIn(void)
       {
          if (to->health > 0)
          {
-            printf("You should offer that nicely to %s.\n", to->description);
+            GameIO_Printf("You should offer that nicely to %s.\n", to->description);
          }
          else
          {
@@ -58,7 +58,7 @@ bool executeAskFrom(void)
       }
       else
       {
-         printf("There is no response from %s.\n", from->description);
+         GameIO_Printf("There is no response from %s.\n", from->description);
       }
    }
    return true;
@@ -78,7 +78,7 @@ bool executeGiveTo(void)
          }
          else
          {
-            printf("No eagerness is shown by %s.\n", to->description);
+            GameIO_Printf("No eagerness is shown by %s.\n", to->description);
          }
       }
    }

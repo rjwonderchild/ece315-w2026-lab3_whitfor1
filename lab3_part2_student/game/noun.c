@@ -1,8 +1,8 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 #include "object.h"
 #include "misc.h"
+#include "game_io.h"
 
 static bool objectHasTag(OBJECT *obj, const char *noun)
 {
@@ -39,20 +39,20 @@ OBJECT *getVisible(const char *intention, const char *noun)
    {
       if (getObject(noun, player, distNotHere) == NULL)
       {
-         printf("I don't understand %s.\n", intention);
+         GameIO_Printf("I don't understand %s.\n", intention);
       }
       else if (isLit(player->location))
       {
-         printf("You don't see any %s here.\n", noun);
+         GameIO_Printf("You don't see any %s here.\n", noun);
       }
       else
       {
-         printf("It's too dark.\n");
+         GameIO_PutString("It's too dark.\n");
       }
    }
    else if (obj == &ambiguousNoun)
    {
-      printf("Please be specific about which %s you mean.\n", noun);
+      GameIO_Printf("Please be specific about which %s you mean.\n", noun);
       obj = NULL;
    }
    return obj;
@@ -63,33 +63,33 @@ OBJECT *getPossession(OBJECT *from, const char *verb, const char *noun)
    OBJECT *obj = NULL;
    if (from == NULL)
    {
-      printf("I don't understand who you want to %s.\n", verb);
+      GameIO_Printf("I don't understand who you want to %s.\n", verb);
    }
    else if ((obj = getObject(noun, from, distHeldContained)) == NULL)
    {
       if (getObject(noun, player, distNotHere) == NULL)
       {
-         printf("I don't understand what you want to %s.\n", verb);
+         GameIO_Printf("I don't understand what you want to %s.\n", verb);
       }
       else if (from == player)
       {
-         printf("You are not holding any %s.\n", noun);
+         GameIO_Printf("You are not holding any %s.\n", noun);
       }
       else
       {
-         printf("There appears to be no %s you can get from %s.\n",
-                noun, from->description);
+         GameIO_Printf("There appears to be no %s you can get from %s.\n",
+                       noun, from->description);
       }
    }
    else if (obj == &ambiguousNoun)
    {
-      printf("Please be specific about which %s you want to %s.\n",
-             noun, verb);
+      GameIO_Printf("Please be specific about which %s you want to %s.\n",
+                    noun, verb);
       obj = NULL;
    }
    else if (obj == from)
    {
-      printf("You should not be doing that to %s.\n", obj->description);
+      GameIO_Printf("You should not be doing that to %s.\n", obj->description);
       obj = NULL;
    }
    return obj;

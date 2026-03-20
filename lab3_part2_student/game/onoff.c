@@ -1,9 +1,9 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "match.h"
 #include "reach.h"
 #include "toggle.h"
+#include "game_io.h"
 
 bool executeTurnOn(void)
 {
@@ -16,8 +16,8 @@ bool executeTurnOn(void)
       }
       else
       {
-         printf(obj == lampOn ? "The lamp is already on.\n"
-                              : "You cannot turn that on.\n");
+         GameIO_PutString(obj == lampOn ? "The lamp is already on.\n"
+                                        : "You cannot turn that on.\n");
       }
    }
    return true;
@@ -34,8 +34,8 @@ bool executeTurnOff(void)
       }
       else
       {
-         printf(obj == lampOff ? "The lamp is already off.\n"
-                               : "You cannot turn that off.\n");
+         GameIO_PutString(obj == lampOff ? "The lamp is already off.\n"
+                                         : "You cannot turn that off.\n");
       }
    }
    return true;

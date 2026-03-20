@@ -1,7 +1,7 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "misc.h"
+#include "game_io.h"
 
 bool isHolding(OBJECT *container, OBJECT *obj)
 {
@@ -90,9 +90,9 @@ int listObjectsAtLocation(OBJECT *location)
       {
          if (count++ == 0)
          {
-            printf("%s:\n", location->contents);
+            GameIO_Printf("%s:\n", location->contents);
          }
-         printf("%s\n", obj->description);
+         GameIO_Printf("%s\n", obj->description);
       }
    }
    return count;

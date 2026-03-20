@@ -1,7 +1,7 @@
 #include <stdbool.h>
-#include <stdio.h>
 #include "object.h"
 #include "misc.h"
+#include "game_io.h"
 
 static int weightOfContents(OBJECT *container)
 {
@@ -18,21 +18,21 @@ static void describeMove(OBJECT *obj, OBJECT *to)
 {
    if (to == player->location)
    {
-      printf("You drop %s.\n", obj->description);
+      GameIO_Printf("You drop %s.\n", obj->description);
    }
    else if (to != player)
    {
-      printf(to->health > 0 ? "You give %s to %s.\n" : "You put %s in %s.\n",
-             obj->description, to->description);
+      GameIO_Printf(to->health > 0 ? "You give %s to %s.\n" : "You put %s in %s.\n",
+                    obj->description, to->description);
    }
    else if (obj->location == player->location)
    {
-      printf("You pick up %s.\n", obj->description);
+      GameIO_Printf("You pick up %s.\n", obj->description);
    }
    else
    {
-      printf("You get %s from %s.\n",
-             obj->description, obj->location->description);
+      GameIO_Printf("You get %s from %s.\n",
+                    obj->description, obj->location->description);
    }
 }
 
@@ -40,25 +40,25 @@ void moveObject(OBJECT *obj, OBJECT *to)
 {
    if (obj == NULL)
    {
-      // already handled by getVisible or getPossession
+      /* already handled by getVisible or getPossession */
    }
    else if (to == NULL)
    {
-      printf("There is nobody here to give that to.\n");
+      GameIO_PutString("There is nobody here to give that to.\n");
    }
    else if (to->capacity == 0)
    {
-      printf(obj == keyForBox && (to == closedBox || to == lockedBox) ?
-                "The key seems to fit the lock.\n" :
-                "It doesn't seem to fit in.\n");
+      GameIO_PutString(obj == keyForBox && (to == closedBox || to == lockedBox) ?
+                       "The key seems to fit the lock.\n" :
+                       "It doesn't seem to fit in.\n");
    }
    else if (obj->weight > to->capacity)
    {
-      printf("That is way too heavy.\n");
+      GameIO_PutString("That is way too heavy.\n");
    }
    else if (obj->weight + weightOfContents(to) > to->capacity)
    {
-      printf("That would become too heavy.\n");
+      GameIO_PutString("That would become too heavy.\n");
    }
    else
    {
