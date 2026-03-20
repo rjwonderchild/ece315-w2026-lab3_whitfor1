@@ -44,6 +44,7 @@ u8 invert = 0x0;
 int oneRingEquipped = 0;
 volatile int resetGame = 0;
 volatile u8 keypad_val = 'x';
+volatile int button1Locked = 0;  // Locks button 1 usage
 
 // Prototypes
 void InitializeKeypad();
@@ -111,7 +112,6 @@ static void keypadTask(void *pvParameters)
         vTaskDelay(50);
     }
 }
-
 // ---------------- OLED TASK ----------------
 static void oledTask(void *pvParameters)
 {
@@ -124,11 +124,12 @@ static void oledTask(void *pvParameters)
 
     int lastGameState = -1;
     u8 lastKey = 'x';
-    //u8 lastInvert = 0xFF;  // force first redraw
 
     while(1)
     {
         if(resetGame){
+            invert = 0x0;               // ensure background reset
+            button1Locked = 0;          // unlock button 1 for new game
             OLED_ClearBuffer(&oledDevice);
             OLED_Update(&oledDevice);
 
@@ -154,15 +155,10 @@ static void oledTask(void *pvParameters)
         u8 key = keypad_val;
         keypad_val = 'x';
 
-        // Redraw only if state, key, or inversion changes
+        // Redraw only if state or key changes
         if(gameState != lastGameState || key != lastKey)
         {
             OLED_ClearBuffer(&oledDevice);
-
-            /*
-            // Apply current inversion before drawing
-            setOLEDInvert(&oledDevice, &invert);
-            */
 
             // -------- STATE 0 --------
             if(gameState == 0)
@@ -182,8 +178,15 @@ static void oledTask(void *pvParameters)
                     showTextWithDissolve(&oledDevice, "It glows blue...", 1200);
                     showTextWithDissolve(&oledDevice, "Press button 1", 1200);
 
-                    // WAIT until button 1 pressed
-                    while(XGpio_DiscreteRead(&btnInst, BTN_CHANNEL) != 1){
+                    // WAIT until button 1 pressed AND button is not locked
+                    while(button1Locked == 0){
+                        u8 btnVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
+                        if(btnVal == 1){
+                            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
+                            invert = 1;
+                            button1Locked = 1;       // lock button 1 after use
+                            setOLEDInvert(&oledDevice, &invert);
+                        }
                         vTaskDelay(50);
                     }
 
@@ -243,7 +246,7 @@ static void oledTask(void *pvParameters)
             else if(gameState == 3)
             {
                 OLED_SetCursor(&oledDevice, 0, 0);
-                OLED_PutString(&oledDevice, "What has hands but cannot clap?");
+                OLED_PutString(&oledDevice, "What has hands  but cannot clap?");
 
                 OLED_SetCursor(&oledDevice, 0, 2);
                 OLED_PutString(&oledDevice, "2: Clock");
@@ -276,7 +279,6 @@ static void oledTask(void *pvParameters)
 
             lastGameState = gameState;
             lastKey = key;
-            lastInvert = invert;
         }
 
         vTaskDelay(50);
@@ -293,9 +295,10 @@ static void buttonTask(void *pvParameters)
 
         if (buttonVal != lastVal)   // detect change
         {
-            if (buttonVal == 1){
+            if (buttonVal == 1 && !button1Locked){
                 XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
                 invert = 0x1;
+                button1Locked = 1;       // lock button 1 after use
                 setOLEDInvert(&oledDevice, &invert);
             }
             else if (buttonVal == 2){
@@ -307,6 +310,7 @@ static void buttonTask(void *pvParameters)
                 XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_OFF);
                 invert = 0x0;
                 oneRingEquipped = 0;
+                button1Locked = 0;       // unlock button 1 on reset
                 resetGame = 1;
             }
         }
