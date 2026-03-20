@@ -44,8 +44,8 @@ u8 invert = 0x0;
 int oneRingEquipped = 0;
 volatile int resetGame = 0;
 volatile u8 keypad_val = 'x';
-volatile int button1Locked = 0;  // Locks button 1 usage
-volatile int button2Locked = 0;  // Locks button 1 usage
+volatile int button1Locked = 1;  // Locks button 1 usage
+volatile int button2Locked = 0;  // Locks button 2 usage
 
 // Prototypes
 void InitializeKeypad();
@@ -175,9 +175,10 @@ static void oledTask(void *pvParameters)
 
                 if(key == '2')
                 {
+                    button1Locked = 0;
                     showTextWithDissolve(&oledDevice, "You draw Sting!", 1200);
                     showTextWithDissolve(&oledDevice, "It glows blue...", 1200);
-                    showTextWithDissolve(&oledDevice, "Press button 1 to equip", 1200);
+                    showTextWithDissolve(&oledDevice, "Press button 1  to equip", 2000);
 
                     // WAIT until button 1 pressed AND button is not locked
                     while(button1Locked == 0){
@@ -203,7 +204,7 @@ static void oledTask(void *pvParameters)
             else if(gameState == 1)
             {
                 OLED_SetCursor(&oledDevice, 0, 0);
-                OLED_PutString(&oledDevice, "A tunnel lies ahead");
+                OLED_PutString(&oledDevice, "A tunnel lies   ahead");
 
                 OLED_SetCursor(&oledDevice, 0, 2);
                 OLED_PutString(&oledDevice, "2: Enter");
@@ -273,14 +274,14 @@ static void oledTask(void *pvParameters)
                 OLED_PutString(&oledDevice, "Equip ring?");
 
                 OLED_SetCursor(&oledDevice, 0, 2);
-                OLED_PutString(&oledDevice, "2: Put it on");
+                OLED_PutString(&oledDevice, "2: Put it on.");
 
                 OLED_SetCursor(&oledDevice, 0, 3);
-                OLED_PutString(&oledDevice, "8: Nah Im good");
+                OLED_PutString(&oledDevice, "8: Resist.");
 
                 if(key == '2'){
                     oneRingEquipped = 1;
-                    showTextWithDissolve(&oledDevice, "Voices echo around you", 1200);
+                    showTextWithDissolve(&oledDevice, "Voices echo     around you", 1200);
                     showTextWithDissolve(&oledDevice, "Press button 2", 1200);
 
                     // WAIT until button 2 pressed AND button is not locked
@@ -293,13 +294,13 @@ static void oledTask(void *pvParameters)
                         vTaskDelay(50);
                     }
                     
-                    showTextWithDissolve(&oledDevice, "You turn invisible", 1200);
-                    showTextWithDissolve(&oledDevice, "Gollum cannot see you", 1200);
+                    showTextWithDissolve(&oledDevice, "You turn        invisible", 1200);
+                    showTextWithDissolve(&oledDevice, "Gollum cannot   see you", 1200);
                     
                     gameState = 5;
                     vTaskDelay(300);
                 } else if(key == '8') {
-                    showTextWithDissolve(&oledDevice, "You get beat up", 1200);
+                    showTextWithDissolve(&oledDevice, "About to   be    attacked!", 1200);
                 }
             }
 
@@ -310,23 +311,23 @@ static void oledTask(void *pvParameters)
                 OLED_PutString(&oledDevice, "You see an exit");
 
                 OLED_SetCursor(&oledDevice, 0, 2);
-                OLED_PutString(&oledDevice, "2: Go towards exit");
+                OLED_PutString(&oledDevice, "2: Go towards it");
 
                 OLED_SetCursor(&oledDevice, 0, 3);
                 OLED_PutString(&oledDevice, "8: Look around");
 
                 if(key == '2'){
                     oneRingEquipped = 1;
-                    showTextWithDissolve(&oledDevice, "You run towards the exit", 1200);
-                    showTextWithDissolve(&oledDevice, "Gollum starts screaming", 1200);   
+                    showTextWithDissolve(&oledDevice, "You run towards the it", 1200);
+                    showTextWithDissolve(&oledDevice, "Gollum starts   screaming", 1200);   
                     showTextWithDissolve(&oledDevice, "MY", 300);
                     showTextWithDissolve(&oledDevice, "PRECIOUS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", 700);
-                    showTextWithDissolve(&oledDevice, "You see the blinding light of daylight", 1200);
+                    showTextWithDissolve(&oledDevice, "You see daylight", 1500);
 
                     gameState = 6;
                     vTaskDelay(300);
                 } else if(key == '8') {
-                    showTextWithDissolve(&oledDevice, "Its just you and Gollum", 1200);
+                    showTextWithDissolve(&oledDevice, "Its just you andGollum", 1500);
                 }
             }
 
@@ -335,9 +336,6 @@ static void oledTask(void *pvParameters)
             {
                 OLED_SetCursor(&oledDevice, 0, 1);
                 OLED_PutString(&oledDevice, "You escape!");
-
-                OLED_SetCursor(&oledDevice, 0, 2);
-                OLED_PutString(&oledDevice, "Thanks for playing!");
 
                 OLED_SetCursor(&oledDevice, 0, 3);
                 OLED_PutString(&oledDevice, "BTN8 = Reset");
@@ -379,7 +377,7 @@ static void buttonTask(void *pvParameters)
                 invert = 0x0;
                 setOLEDInvert(&oledDevice, &invert);
                 oneRingEquipped = 0;
-                button1Locked = 0;       // unlock button 1 on reset
+                button1Locked = 1;
                 resetGame = 1;
             }
         }
