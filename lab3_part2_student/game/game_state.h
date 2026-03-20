@@ -3,7 +3,22 @@
 
 #include <stdbool.h>
 
-extern bool gRgbUnlocked;
+typedef enum
+{
+    RGB_MODE_OFF = 0,
+    RGB_MODE_CYAN,
+    RGB_MODE_YELLOW
+} RGBMode;
+
+extern bool gHasRing;
+extern bool gHasSting;
+
+extern bool gRingDrawn;
+extern bool gStingDrawn;
+
 extern bool gRiddleCompleted;
+extern RGBMode gRgbMode;
+
+void GameState_UpdateRgbMode(void);
 
 #endif
