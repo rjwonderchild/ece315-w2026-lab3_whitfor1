@@ -20,7 +20,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
-#include "pmodkypd.h"
 #include "sleep.h"
 #include "PmodOLED.h"
 #include "OLEDControllerCustom.h"
@@ -39,8 +38,8 @@
 
 // Declaring the devices
 XGpio btnInst;
-extern XGpio rgbInst;
-extern PmodOLED oledDevice;
+XGpio rgbInst;
+PmodOLED oledDevice;
 
 // Display state machine
 typedef enum {
@@ -74,7 +73,7 @@ extern u8 invert = 0x0; // true = whitebackground/black letters
                        // false = black background /white letters
 
 // New global flag
-static int oneRingEquipped = 0;
+int oneRingEquipped = 0;
 
 /*
 u8 size = 8, origin = 0;
