@@ -4,6 +4,7 @@
 #include "reach.h"
 #include "toggle.h"
 #include "game_io.h"
+#include "game_state.h"
 
 bool executeTurnOn(void)
 {
@@ -13,10 +14,12 @@ bool executeTurnOn(void)
       if (obj == lampOff)
       {
          toggleLamp();
+         gStingDrawn = true;
+         GameState_UpdateRgbMode();
       }
       else
       {
-         GameIO_PutString(obj == lampOn ? "The lamp is already on.\n"
+         GameIO_PutString(obj == lampOn ? "Sting is already drawn.\n"
                                         : "You cannot turn that on.\n");
       }
    }
@@ -31,10 +34,12 @@ bool executeTurnOff(void)
       if (obj == lampOn)
       {
          toggleLamp();
+         gStingDrawn = false;
+         GameState_UpdateRgbMode();
       }
       else
       {
-         GameIO_PutString(obj == lampOff ? "The lamp is already off.\n"
+         GameIO_PutString(obj == lampOff ? "Sting is already sheathed.\n"
                                          : "You cannot turn that off.\n");
       }
    }
