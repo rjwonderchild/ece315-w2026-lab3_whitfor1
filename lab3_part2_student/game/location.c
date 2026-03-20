@@ -13,7 +13,35 @@ void executeLook(const char *noun)
    }
    else
    {
-      printf("I don't understand what you want to see.\n");
+      OBJECT *obj = getVisible("what you want to look at", noun);
+      switch (getDistance(player, obj))
+      {
+      case distHereContained:
+         printf("Hard to see, try to get it first.\n");
+         break;
+      case distOverthere:
+         printf("Too far away, move closer please.\n");
+         break;
+      case distNotHere:
+         printf("You don't see any %s here.\n", noun);
+         break;
+      case distUnknownObject:
+         // already handled by getVisible
+         break;
+      default:
+         printf("%s\n", obj->details);
+         listObjectsAtLocation(obj);
+      }
+   }
+}
+static void movePlayer(OBJECT *passage)
+{
+   printf("%s\n", passage->textGo);
+   if (passage->destination != NULL)
+   {
+      player->location = passage->destination;
+      printf("\n");
+      executeLook("around");
    }
 }
 void executeGo(const char *noun)
@@ -22,9 +50,7 @@ void executeGo(const char *noun)
    switch (getDistance(player, obj))
    {
    case distOverthere:
-      printf("OK.\n");
-      player->location = obj;
-      executeLook("around");
+      movePlayer(getPassage(player->location, obj));
       break;
    case distNotHere:
       printf("You don't see any %s here.\n", noun);
@@ -33,15 +59,6 @@ void executeGo(const char *noun)
       // already handled by getVisible
       break;
    default:
-      if (obj->destination != NULL)
-      {
-         printf("OK.\n");
-         player->location = obj->destination;
-         executeLook("around");
-      }
-      else
-      {
-         printf("You can't get much closer than this.\n");
-      }
+      movePlayer(obj);
    }
 }

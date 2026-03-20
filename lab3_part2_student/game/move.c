@@ -1,5 +1,17 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include "object.h"
+#include "misc.h"
+static int weightOfContents(OBJECT *container)
+{
+   int sum = 0;
+   OBJECT *obj;
+   for (obj = objs; obj < endOfObjs; obj++)
+   {
+      if (isHolding(container, obj)) sum += obj->weight;
+   }
+   return sum;
+}
 static void describeMove(OBJECT *obj, OBJECT *to)
 {
    if (to == player->location)
@@ -8,7 +20,7 @@ static void describeMove(OBJECT *obj, OBJECT *to)
    }
    else if (to != player)
    {
-      printf(to == guard ? "You give %s to %s.\n" : "You put %s in %s.\n",
+      printf(to->health > 0 ? "You give %s to %s.\n" : "You put %s in %s.\n",
              obj->description, to->description);
    }
    else if (obj->location == player->location)
@@ -31,9 +43,13 @@ void moveObject(OBJECT *obj, OBJECT *to)
    {
       printf("There is nobody here to give that to.\n");
    }
-   else if (obj->location == NULL)
+   else if (obj->weight > to->capacity)
    {
       printf("That is way too heavy.\n");
+   }
+   else if (obj->weight + weightOfContents(to) > to->capacity)
+   {
+      printf("That would become too heavy.\n");
    }
    else
    {

@@ -22,7 +22,7 @@ void executeGet(const char *noun)
       // already handled by getVisible
       break;
    default:
-      if (obj->location == guard)
+      if (obj->location != NULL && obj->location->health > 0)
       {
          printf("You should ask %s nicely.\n", obj->location->description);
       }
