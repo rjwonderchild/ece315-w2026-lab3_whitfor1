@@ -25,6 +25,11 @@
 #include "PmodOLED.h"
 #include "OLEDControllerCustom.h"
 
+// Game State libraries
+#include "game_state.h"
+#include "object.h"
+#include "toggle.h"
+
 // Files for displaying story
 #include "story.h"
 
@@ -56,6 +61,9 @@ int grphAbs(int foo);
 void OLED_DrawLineTo(PmodOLED *InstancePtr, int xco, int yco);
 void OLED_getPos(PmodOLED *InstancePtr, int *pxco, int *pyco);
 void drawTarget(u8 targetX, u8 targetY, u8 width, u8 length);
+static void HandleStingButtonPress(void);
+static void HandleRingButtonPress(void);
+static void UpdateRgbFromGameState(void);
 
 const u8 orientation = 0x1; // Set up for Normal PmodOLED(false) vs normal
                             // Onboard OLED(true)
@@ -94,6 +102,7 @@ int main()
 
     // Set RGB as output
     XGpio_SetDataDirection(&rgbInst, RGB_CHANNEL, 0x00);
+	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_OFF);
 
     // Initialize UART
     status = initializeUART();
@@ -264,30 +273,88 @@ static void oledTask( void *pvParameters )
 	}
 }
 
+static void UpdateRgbFromGameState(void)
+{
+    switch (gRgbMode)
+    {
+    case RGB_MODE_CYAN:
+        XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
+        break;
+
+    case RGB_MODE_YELLOW:
+        XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
+        break;
+
+    default:
+        XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_OFF);
+        break;
+    }
+}
+
+static void HandleStingButtonPress(void)
+{
+    if (!gHasSting)
+    {
+        return;
+    }
+
+    gStingDrawn = !gStingDrawn;
+
+    if (gStingDrawn)
+    {
+        if (lampOff->location == player)
+        {
+            toggleLamp();
+        }
+    }
+    else
+    {
+        if (lampOn->location == player)
+        {
+            toggleLamp();
+        }
+    }
+
+    GameState_UpdateRgbMode();
+    UpdateRgbFromGameState();
+}
+
+static void HandleRingButtonPress(void)
+{
+    if (!gHasRing)
+    {
+        return;
+    }
+
+    gRingDrawn = !gRingDrawn;
+    GameState_UpdateRgbMode();
+    UpdateRgbFromGameState();
+}
 
 static void buttonTask(void *pvParameters)
 {
     u8 buttonVal = 0;
+    u8 prevButtonVal = 0;
 
-	if (buttonPressed && gRgbUnlocked)
-	{
-		
-    	while(1){
-        	buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
+    while (1)
+    {
+        buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
 
-        	if (buttonVal == 1){
-            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
-        	}
-        	else if (buttonVal == 2){
-            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
-        	}
-        	else if (buttonVal == 4){
-            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_MAGENTA);
-        	}
-        	else if (buttonVal == 8){
-            	XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_WHITE);
-        	}
-		}
+        /*
+         * Edge detect: only act when a button is newly pressed.
+         * Adjust button mapping as needed 
+         */
+        if ((buttonVal & 0x01) && !(prevButtonVal & 0x01))
+        {
+            HandleStingButtonPress();
+        }
+
+        if ((buttonVal & 0x02) && !(prevButtonVal & 0x02))
+        {
+            HandleRingButtonPress();
+        }
+
+        prevButtonVal = buttonVal;
         vTaskDelay(10);
     }
 }
