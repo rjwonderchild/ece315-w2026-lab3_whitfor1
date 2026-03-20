@@ -29,6 +29,8 @@
 #include "game_state.h"
 #include "object.h"
 #include "toggle.h"
+#include "game_io.h"
+#include "parsexec.h"
 
 // Files for displaying story
 #include "story.h"
@@ -64,6 +66,9 @@ void drawTarget(u8 targetX, u8 targetY, u8 width, u8 length);
 static void HandleStingButtonPress(void);
 static void HandleRingButtonPress(void);
 static void UpdateRgbFromGameState(void);
+void gameInit(void);
+void gameShowIntro(PmodOLED *oled);
+bool gamePollAndProcess(void);
 
 const u8 orientation = 0x1; // Set up for Normal PmodOLED(false) vs normal
                             // Onboard OLED(true)
@@ -216,48 +221,38 @@ void dissolveScreenFast(void) {
     OLED_Update(&oledDevice); // final update to ensure all pixels cleared
 }
 
-static void oledTask( void *pvParameters )
+static void oledTask(void *pvParameters)
 {
-	u8 buttonVal = 0;
-	char temp[10];
-	xil_printf("UART and SPI opened for PmodOLED Demo\n");
-	OLED_SetDrawMode(&oledDevice, 0);
-	// Turn automatic updating off
-	OLED_SetCharUpdate(&oledDevice, 0);
+    bool introShown = false;
 
-    // Variables needed for keyboard entry.
-    char kbChar;
-    char inputBuffer[32];   // stores typed characters
-    int index = 0;
+    xil_printf("UART and SPI opened for PmodOLED game task\n");
 
-    // Story Flags
-    int titleFlag = 1;
-    int storyCardFlag = 0;
+    GameIO_Init(&oledDevice);
 
-	while(1){
-        buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-        // Check for keyboard input
-/*
-        if (xQueueReceive(xKeyboardQueue, &kbChar, 0) == pdTRUE) {
+    while (1)
+    {
+        if (!introShown)
+        {
+            gameShowIntro(&oledDevice);
 
-            // Handle ENTER key (carriage return)
-            if (kbChar == '\r') {
-                inputBuffer[index] = '\0';  // null terminate
+            /*
+             * Re-initialize the gameplay text console after the intro cards.
+             * This clears any leftover title-card text and sets up the rolling
+             * 4-line display buffer for the actual game.
+             */
+            GameIO_Init(&oledDevice);
+            gameInit();
 
-                OLED_ClearBuffer(&oledDevice);
-                OLED_SetCursor(&oledDevice, 0, 1);
-                OLED_PutString(&oledDevice, inputBuffer);
-                OLED_Update(&oledDevice);
-
-                index = 0; // reset for next input
-            }
-            else {
-                if (index < sizeof(inputBuffer) - 1) {
-                    inputBuffer[index++] = kbChar;
-                }
-            }
+            introShown = true;
         }
-*/
+        else
+        {
+            gamePollAndProcess();
+        }
+
+        vTaskDelay(10);
+    }
+}
         if (titleFlag) {
             showTitleScreen(&oledDevice);
 
