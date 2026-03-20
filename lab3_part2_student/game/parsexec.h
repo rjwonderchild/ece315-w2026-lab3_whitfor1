@@ -1,1 +1,1 @@
-extern bool parseAndExecute(char *input);
+extern bool parseAndExecute(const char *input);

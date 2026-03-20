@@ -3,6 +3,7 @@
 #include <string.h>
 #include "object.h"
 #include "misc.h"
+
 static bool objectHasTag(OBJECT *obj, const char *noun)
 {
    if (noun != NULL && *noun != '\0')
@@ -15,7 +16,9 @@ static bool objectHasTag(OBJECT *obj, const char *noun)
    }
    return false;
 }
+
 static OBJECT ambiguousNoun;
+
 static OBJECT *getObject(const char *noun, OBJECT *from, DISTANCE maxDistance)
 {
    OBJECT *obj, *res = NULL;
@@ -28,6 +31,7 @@ static OBJECT *getObject(const char *noun, OBJECT *from, DISTANCE maxDistance)
    }
    return res;
 }
+
 OBJECT *getVisible(const char *intention, const char *noun)
 {
    OBJECT *obj = getObject(noun, player, distOverthere);
@@ -37,9 +41,13 @@ OBJECT *getVisible(const char *intention, const char *noun)
       {
          printf("I don't understand %s.\n", intention);
       }
-      else
+      else if (isLit(player->location))
       {
          printf("You don't see any %s here.\n", noun);
+      }
+      else
+      {
+         printf("It's too dark.\n");
       }
    }
    else if (obj == &ambiguousNoun)
@@ -49,6 +57,7 @@ OBJECT *getVisible(const char *intention, const char *noun)
    }
    return obj;
 }
+
 OBJECT *getPossession(OBJECT *from, const char *verb, const char *noun)
 {
    OBJECT *obj = NULL;

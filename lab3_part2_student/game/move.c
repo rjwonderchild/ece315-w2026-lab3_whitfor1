@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "object.h"
 #include "misc.h"
+
 static int weightOfContents(OBJECT *container)
 {
    int sum = 0;
@@ -12,6 +13,7 @@ static int weightOfContents(OBJECT *container)
    }
    return sum;
 }
+
 static void describeMove(OBJECT *obj, OBJECT *to)
 {
    if (to == player->location)
@@ -33,6 +35,7 @@ static void describeMove(OBJECT *obj, OBJECT *to)
              obj->description, obj->location->description);
    }
 }
+
 void moveObject(OBJECT *obj, OBJECT *to)
 {
    if (obj == NULL)
@@ -42,6 +45,12 @@ void moveObject(OBJECT *obj, OBJECT *to)
    else if (to == NULL)
    {
       printf("There is nobody here to give that to.\n");
+   }
+   else if (to->capacity == 0)
+   {
+      printf(obj == keyForBox && (to == closedBox || to == lockedBox) ?
+                "The key seems to fit the lock.\n" :
+                "It doesn't seem to fit in.\n");
    }
    else if (obj->weight > to->capacity)
    {
