@@ -31,6 +31,8 @@
 #define BTN_CHANNEL 1
 #define RGB_CHANNEL 2
 
+#define DEFAULT_KEYPAD "0FED789C456B123A"
+
 // Devices
 XGpio btnInst;
 XGpio rgbInst;
@@ -151,60 +153,123 @@ static void oledTask(void *pvParameters)
         int lastGameState = -1;
         u8 lastKey = 'x';
 
-        // Only redraw if state changed or new key pressed
-        if (gameState != lastGameState || key != lastKey) {
+        // Only redraw if gameState or key changed
+        if(gameState != lastGameState || key != lastKey)
+        {
             OLED_ClearBuffer(&oledDevice);
 
-            switch(gameState) {
-                case 0:
-                    OLED_SetCursor(&oledDevice, 0, 0);
-                    OLED_PutString(&oledDevice, "Use something?");
-                    OLED_SetCursor(&oledDevice, 0, 2);
-                    OLED_PutString(&oledDevice, "2: Equip sword");
-                    OLED_SetCursor(&oledDevice, 0, 3);
-                    OLED_PutString(&oledDevice, "8: Wait");
-                    break;
-                case 1:
-                    OLED_SetCursor(&oledDevice, 0, 0);
-                    OLED_PutString(&oledDevice, "A tunnel lies ahead");
-                    OLED_SetCursor(&oledDevice, 0, 2);
-                    OLED_PutString(&oledDevice, "2: Enter");
-                    OLED_SetCursor(&oledDevice, 0, 3);
-                    OLED_PutString(&oledDevice, "8: Stay");
-                    break;
-                case 2:
-                    OLED_SetCursor(&oledDevice, 0, 0);
-                    OLED_PutString(&oledDevice, "Gollum!");
-                    OLED_SetCursor(&oledDevice, 0, 2);
-                    OLED_PutString(&oledDevice, "2: Talk");
-                    OLED_SetCursor(&oledDevice, 0, 3);
-                    OLED_PutString(&oledDevice, "8: Hide");
-                    break;
-                case 3:
-                    OLED_SetCursor(&oledDevice, 0, 0);
-                    OLED_PutString(&oledDevice, "What has hands but cannot clap?");
-                    OLED_SetCursor(&oledDevice, 0, 2);
-                    OLED_PutString(&oledDevice, "2: Clock");
-                    OLED_SetCursor(&oledDevice, 0, 3);
-                    OLED_PutString(&oledDevice, "8: Sword");
-                    break;
-                case 4:
-                    OLED_SetCursor(&oledDevice, 0, 1);
-                    OLED_PutString(&oledDevice, "You escape!");
-                    OLED_SetCursor(&oledDevice, 0, 3);
-                    OLED_PutString(&oledDevice, "BTN2 = Ring");
-                    break;
+            // -------- STATE 0: EQUIP SWORD --------
+            if(gameState == 0)
+            {
+                OLED_SetCursor(&oledDevice, 0, 0);
+                OLED_PutString(&oledDevice, "Use something?");
+
+                OLED_SetCursor(&oledDevice, 0, 2);
+                OLED_PutString(&oledDevice, "2: Equip sword");
+
+                OLED_SetCursor(&oledDevice, 0, 3);
+                OLED_PutString(&oledDevice, "8: Wait");
+
+                if(key == '2')
+                {
+                    showTextWithDissolve(&oledDevice, "You draw Sting!", 1200);
+                    showTextWithDissolve(&oledDevice, "Press button 1", 1200);
+                    showTextWithDissolve(&oledDevice, "It glows blue...", 1200);
+                    gameState = 1;
+                    vTaskDelay(300);
+                }   else if(key == '8') {
+                showTextWithDissolve(&oledDevice, "You hesitate...", 1200);
+                }
             }
 
-            OLED_Update(&oledDevice);
+            // -------- STATE 1 --------
+            else if(gameState == 1)
+            {
+                OLED_SetCursor(&oledDevice, 0, 0);
+                OLED_PutString(&oledDevice, "A tunnel lies ahead");
 
+                OLED_SetCursor(&oledDevice, 0, 2);
+                OLED_PutString(&oledDevice, "2: Enter");
+
+                OLED_SetCursor(&oledDevice, 0, 3);
+                OLED_PutString(&oledDevice, "8: Stay");
+
+                if(key == '2'){
+                    showTextWithDissolve(&oledDevice, "You move deeper...", 1200);
+                    gameState = 2;
+                    vTaskDelay(300);
+                }
+                else if(key == '8') {
+                    showTextWithDissolve(&oledDevice, "You stay still...", 1200);
+                }
+            }
+
+            // -------- STATE 2 --------
+            else if(gameState == 2)
+            {
+                OLED_SetCursor(&oledDevice, 0, 0);
+                OLED_PutString(&oledDevice, "Gollum!");
+
+                OLED_SetCursor(&oledDevice, 0, 2);
+                OLED_PutString(&oledDevice, "2: Talk");
+
+                OLED_SetCursor(&oledDevice, 0, 3);
+                OLED_PutString(&oledDevice, "8: Hide");
+
+                if(key == '2'){
+                    showTextWithDissolve(&oledDevice, "Riddle time!", 1200);
+                    gameState = 3;
+                    vTaskDelay(300);
+                } 
+                else if(key == '8') {
+                    showTextWithDissolve(&oledDevice, "You hide...", 1200);
+                }
+            }
+
+            // -------- STATE 3 --------
+            else if(gameState == 3)
+            {
+
+                OLED_SetCursor(&oledDevice, 0, 0);
+                OLED_PutString(&oledDevice, "What has hands but cannot clap?");
+
+                OLED_SetCursor(&oledDevice, 0, 2);
+                OLED_PutString(&oledDevice, "2: Clock");
+
+                OLED_SetCursor(&oledDevice, 0, 3);
+                OLED_PutString(&oledDevice, "8: Sword");
+
+                if(key == '2'){
+                    showTextWithDissolve(&oledDevice, "Correct!", 1200);
+                    showTextWithDissolve(&oledDevice, "You find a gold ring!", 1200);
+                    showTextWithDissolve(&oledDevice, "It feels precious", 1200);
+                    oneRingEquipped = 1;
+                    gameState = 4;
+
+                    vTaskDelay(300);
+                } else if(key == '8') {
+                    showTextWithDissolve(&oledDevice, "Wrong!", 1200);
+                }
+            }
+
+                    // -------- STATE 4: END --------
+            else if(gameState == 4) {
+
+                    OLED_SetCursor(&oledDevice, 0, 1);
+                    OLED_PutString(&oledDevice, "You escape!");
+
+                    OLED_SetCursor(&oledDevice, 0, 3);
+                    OLED_PutString(&oledDevice, "BTN2 = Ring");
+                }
+
+            OLED_Update(&oledDevice);
             lastGameState = gameState;
             lastKey = key;
         }
+    
+        vTaskDelay(100);
 
-            vTaskDelay(100);
     }
-
 }
 
 // ---------------- BUTTON TASK ----------------
@@ -236,34 +301,6 @@ static void buttonTask(void *pvParameters)
         }
 
         lastVal = buttonVal;
-        vTaskDelay(50);
-    }
-}
-// ---------------- BUTTON TASK ----------------
-static void buttonTask(void *pvParameters)
-{
-    u8 buttonVal;
-
-    while(1){
-        buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-
-        if (buttonVal == 1){  // Sting
-            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
-            invert = 1;
-            setOLEDInvert(&oledDevice, &invert);
-        }
-        else if (buttonVal == 2){  // Ring
-            if(oneRingEquipped){
-                XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
-            }
-        }
-        else if (buttonVal == 8){  // Reset
-            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_OFF);
-            invert = 0x0;
-            oneRingEquipped = 0;
-            resetGame = 1;
-        }
-
         vTaskDelay(50);
     }
 }
