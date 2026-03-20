@@ -46,6 +46,7 @@ volatile int resetGame = 0;
 volatile u8 keypad_val = 'x';
 volatile int button1Locked = 1;  // Locks button 1 usage
 volatile int button2Locked = 0;  // Locks button 2 usage
+volatile int button8Locked = 1;  // Locks reset until splash done
 
 // Prototypes
 void InitializeKeypad();
@@ -130,7 +131,8 @@ static void oledTask(void *pvParameters)
     {
         if(resetGame){
             invert = 0x0;               // ensure background reset
-            button1Locked = 0;          // unlock button 1 for new game
+            button1Locked = 1;
+            button8Locked = 1;
             OLED_ClearBuffer(&oledDevice);
             OLED_Update(&oledDevice);
 
@@ -178,7 +180,7 @@ static void oledTask(void *pvParameters)
                     button1Locked = 0;
                     showTextWithDissolve(&oledDevice, "You draw Sting!", 1200);
                     showTextWithDissolve(&oledDevice, "It glows blue...", 1200);
-                    showTextWithDissolve(&oledDevice, "Press button 1  to equip", 2000);
+                    showTextWithDissolve(&oledDevice, "Press button 1  to equip", 1200);
 
                     // WAIT until button 1 pressed AND button is not locked
                     while(button1Locked == 0){
@@ -318,7 +320,7 @@ static void oledTask(void *pvParameters)
 
                 if(key == '2'){
                     oneRingEquipped = 1;
-                    showTextWithDissolve(&oledDevice, "You run towards the it", 1200);
+                    showTextWithDissolve(&oledDevice, "You run towards the exit", 1200);
                     showTextWithDissolve(&oledDevice, "Gollum starts   screaming", 1200);   
                     showTextWithDissolve(&oledDevice, "MY", 300);
                     showTextWithDissolve(&oledDevice, "PRECIOUS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", 700);
@@ -334,6 +336,7 @@ static void oledTask(void *pvParameters)
             // -------- STATE 6 --------
             else if(gameState == 6)
             {
+                button8Locked = 0;
                 OLED_SetCursor(&oledDevice, 0, 1);
                 OLED_PutString(&oledDevice, "You escape!");
 
@@ -372,12 +375,13 @@ static void buttonTask(void *pvParameters)
                     XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
                 }
             }
-            else if (buttonVal == 8){
+            else if (buttonVal == 8 && !button8Locked){
                 XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_OFF);
                 invert = 0x0;
                 setOLEDInvert(&oledDevice, &invert);
                 oneRingEquipped = 0;
                 button1Locked = 1;
+                button8Locked = 1;
                 resetGame = 1;
             }
         }
