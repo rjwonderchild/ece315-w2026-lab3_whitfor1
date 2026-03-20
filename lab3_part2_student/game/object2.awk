@@ -72,7 +72,7 @@ function outputRecord(separator, conditionName, prospectValue)
    }
    else if (pass == "c1") {
       if (prop["condition"] != "") {
-         print "static bool condition" count "(void) { " prop["condition"] " }";
+         print "static bool condition" count "(void) " prop["condition"];
       }
       print "static const char *tags" count "[] = { " prop["tags"] ", NULL};";
    }

@@ -1,7 +1,9 @@
 #include <stdbool.h>
+#include <stddef.h>
 #include "object.h"
 #include "match.h"
 #include "reach.h"
+
 
 bool executeOpen(void)
 {

@@ -41,8 +41,14 @@ static void handleSpecialPickup(OBJECT *obj, OBJECT *to)
 {
    if (to == player && obj == thering)
    {
-      gRgbUnlocked = true;
+      gHasRing = true;
       printf("As you take the Ring, a strange power wakes within the dark.\n");
+   }
+
+   if (to == player && (obj == lampOff || obj == lampOn))
+   {
+      gHasSting = true;
+      printf("You take Sting. Its Elvish blade may light your way.\n");
    }
 }
 
@@ -75,19 +81,5 @@ void moveObject(OBJECT *obj, OBJECT *to)
       describeMove(obj, to);
       obj->location = to;
       handleSpecialPickup(obj, to);
-   }
-}
-static void handleSpecialPickup(OBJECT *obj, OBJECT *to)
-{
-   if (to == player && obj == thering)
-   {
-      gHasRing = true;
-      printf("As you take the Ring, a strange power wakes within the dark.\n");
-   }
-
-   if (to == player && (obj == lampOff || obj == lampOn))
-   {
-      gHasSting = true;
-      printf("You take Sting. Its Elvish blade may light your way.\n");
    }
 }
