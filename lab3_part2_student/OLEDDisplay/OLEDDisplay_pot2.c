@@ -31,6 +31,7 @@
 #include "toggle.h"
 #include "game_io.h"
 #include "parsexec.h"
+#inclide "game.h"
 
 // Files for displaying story
 #include "story.h"
@@ -66,9 +67,6 @@ void drawTarget(u8 targetX, u8 targetY, u8 width, u8 length);
 static void HandleStingButtonPress(void);
 static void HandleRingButtonPress(void);
 static void UpdateRgbFromGameState(void);
-void gameInit(void);
-void gameShowIntro(PmodOLED *oled);
-bool gamePollAndProcess(void);
 
 const u8 orientation = 0x1; // Set up for Normal PmodOLED(false) vs normal
                             // Onboard OLED(true)
