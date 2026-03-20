@@ -3,6 +3,10 @@
 #include "task.h"
 #include "queue.h"
 
+// UART driver header file
+#include "uart_driver.h"
+#include "rgb_led.h"
+
 // Include xilinx Libraries
 #include "xparameters.h"
 #include "xgpio.h"
@@ -25,7 +29,9 @@
 #define BTN_DEVICE_ID  XPAR_GPIO_INPUTS_BASEADDR
 #define KYPD_DEVICE_ID XPAR_GPIO_KEYPAD_BASEADDR
 #define KYPD_BASE_ADDR XPAR_GPIO_KEYPAD_BASEADDR
+#define LEDS_DEVICE_ID	XPAR_GPIO_LEDS_BASEADDR
 #define BTN_CHANNEL    1
+#define RGB_CHANNEL 2
 
 #define FRAME_DELAY 50000
 
@@ -34,8 +40,14 @@
 
 // Declaring the devices
 XGpio btnInst;
+XGpio rgbInst;
 PmodOLED oledDevice;
 PmodKYPD 	KYPDInst;
+
+// Keyboard Queue
+QueueHandle_t xKeyboardQueue;
+extern QueueHandle_t xRxQueue;
+extern QueueHandle_t xTxQueue;
 
 // Function prototypes
 void InitializeKeypad();
@@ -43,13 +55,13 @@ void initializeScreen();
 static void keypadTask( void *pvParameters );
 static void oledTask( void *pvParameters );
 static void buttonTask( void *pvParameters );
+static void keyboardTask(void *pvParameters);
 int grphClampXco(int xco);
 int grphClampYco(int yco);
 int grphAbs(int foo);
 void OLED_DrawLineTo(PmodOLED *InstancePtr, int xco, int yco);
 void OLED_getPos(PmodOLED *InstancePtr, int *pxco, int *pyco);
 void drawTarget(u8 targetX, u8 targetY, u8 width, u8 length);
-
 
 const u8 orientation = 0x1; // Set up for Normal PmodOLED(false) vs normal
                             // Onboard OLED(true)
@@ -82,6 +94,36 @@ int main()
 		return XST_FAILURE;
 	}
 
+    // RGB LED
+    status = XGpio_Initialize(&rgbInst, LEDS_DEVICE_ID);
+    if (status != XST_SUCCESS){
+        xil_printf("GPIO Initialization for RGB failed.\r\n");
+        return XST_FAILURE;
+    }
+
+    // Set RGB as output
+    XGpio_SetDataDirection(&rgbInst, RGB_CHANNEL, 0x00);
+
+    // Initialize UART
+    status = initializeUART();
+
+    extern XScuGic InterruptController;
+    extern XUartPs UART;
+
+    xTxQueue = xQueueCreate(64, sizeof(u8));
+    xRxQueue = xQueueCreate(64, sizeof(u8));
+
+    configASSERT(xTxQueue);
+    configASSERT(xRxQueue);
+
+    status = setupInterruptSystem(&InterruptController, &UART, UART_INT_IRQ_ID);
+    if (status != XST_SUCCESS){
+        xil_printf("UART interrupt setup failed\n");
+    }
+
+    // Create keyboard queue
+    xKeyboardQueue = xQueueCreate(32, sizeof(char));
+    configASSERT(xKeyboardQueue);
 
 	xil_printf("Initialization Complete, System Ready!\n");
 
@@ -102,7 +144,6 @@ int main()
 			   , tskIDLE_PRIORITY			// The task runs at the idle priority. 
 			   , NULL
 			   );
-
 	xTaskCreate( buttonTask
 			   , "button task"
 			   , configMINIMAL_STACK_SIZE
@@ -110,6 +151,13 @@ int main()
 			   , tskIDLE_PRIORITY
 			   , NULL
 			   );
+    xTaskCreate( keyboardTask
+               , "keyboard task"
+               , configMINIMAL_STACK_SIZE
+               , NULL
+               , tskIDLE_PRIORITY
+               , NULL );
+    
 
 	vTaskStartScheduler();
 
@@ -125,7 +173,6 @@ void InitializeKeypad()
    KYPD_begin(&KYPDInst, KYPD_BASE_ADDR);
    KYPD_loadKeyTable(&KYPDInst, (u8*) DEFAULT_KEYTABLE);
 }
-
 
 static void keypadTask( void *pvParameters )
 {
@@ -188,6 +235,25 @@ static void keypadTask( void *pvParameters )
    }
 }
 
+static void keyboardTask(void *pvParameters)
+{
+    char rxChar;
+
+    while (1)
+    {
+        if (myReceiveData() == pdTRUE)
+        {
+            rxChar = (char) myReceiveByte();
+
+            // Send character to OLED via queue
+            xQueueSend(xKeyboardQueue, &rxChar, 10);
+        }
+
+        vTaskDelay(5);
+    }
+}
+
+
 // -------------------------
 // Fast Random Pixel Dissolve
 // -------------------------
@@ -237,6 +303,11 @@ static void oledTask( void *pvParameters )
 	// Turn automatic updating off
 	OLED_SetCharUpdate(&oledDevice, 0);
 
+    // Variables needed for keyboard entry.
+    char kbChar;
+    char inputBuffer[32];   // stores typed characters
+    int index = 0;
+
     // Variables needed for the title card and transition
     int titleFlag = 1;
     
@@ -245,6 +316,28 @@ static void oledTask( void *pvParameters )
 
 	while(1){
         buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
+        // Check for keyboard input
+/*
+        if (xQueueReceive(xKeyboardQueue, &kbChar, 0) == pdTRUE) {
+
+            // Handle ENTER key (carriage return)
+            if (kbChar == '\r') {
+                inputBuffer[index] = '\0';  // null terminate
+
+                OLED_ClearBuffer(&oledDevice);
+                OLED_SetCursor(&oledDevice, 0, 1);
+                OLED_PutString(&oledDevice, inputBuffer);
+                OLED_Update(&oledDevice);
+
+                index = 0; // reset for next input
+            }
+            else {
+                if (index < sizeof(inputBuffer) - 1) {
+                    inputBuffer[index++] = kbChar;
+                }
+            }
+        }
+*/
         if (titleFlag) {
             OLED_ClearBuffer(&oledDevice);
             OLED_SetCursor(&oledDevice, 0, 1);
@@ -307,31 +400,31 @@ static void oledTask( void *pvParameters )
 
             storyCardFlag = 0;
         }
+
 	}
 }
 
 
 static void buttonTask(void *pvParameters)
 {
-	u8 buttonVal = 0;
-    u8 lastButtonVal = 0;
+    u8 buttonVal = 0;
 
-	while(1){
-		buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
-		
-        if (buttonVal == 1 && lastButtonVal == 0){
-            if (lives > 0) {
-			//checkShot();
-            }
-		} else if (buttonVal == 1 && lives == 0){
-			xil_printf("game over, reset with BTN3\n");
-		} else if (buttonVal == 8 && lastButtonVal == 0){
-			xil_printf("reset\n");
-			lives = 3;
-			score = 0;
-		}
+    while(1){
+        buttonVal = XGpio_DiscreteRead(&btnInst, BTN_CHANNEL);
 
-        lastButtonVal = buttonVal;
-		vTaskDelay(10);
-	}
+        if (buttonVal == 1){
+            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_CYAN);
+        }
+        else if (buttonVal == 2){
+            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
+        }
+        else if (buttonVal == 4){
+            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_MAGENTA);
+        }
+        else if (buttonVal == 8){
+            XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_WHITE);
+        }
+
+        vTaskDelay(10);
+    }
 }
