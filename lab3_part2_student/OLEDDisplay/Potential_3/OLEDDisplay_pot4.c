@@ -45,7 +45,7 @@ int oneRingEquipped = 0;
 volatile int resetGame = 0;
 volatile u8 keypad_val = 'x';
 volatile int button1Locked = 1;  // Locks button 1 usage
-volatile int button2Locked = 0;  // Locks button 2 usage
+volatile int button2Locked = 1;  // Locks button 2 usage
 volatile int button8Locked = 1;  // Locks reset until splash done
 
 // Prototypes
@@ -132,7 +132,9 @@ static void oledTask(void *pvParameters)
         if(resetGame){
             invert = 0x0;               // ensure background reset
             button1Locked = 1;
+            button2Locked = 1;
             button8Locked = 1;
+            oneRingEquipped = 0;
             OLED_ClearBuffer(&oledDevice);
             OLED_Update(&oledDevice);
 
@@ -283,6 +285,7 @@ static void oledTask(void *pvParameters)
 
                 if(key == '2'){
                     oneRingEquipped = 1;
+                    button2Locked = 0;
                     showTextWithDissolve(&oledDevice, "Voices echo     around you", 1200);
                     showTextWithDissolve(&oledDevice, "Press button 2", 1200);
 
@@ -370,9 +373,10 @@ static void buttonTask(void *pvParameters)
                 button1Locked = 1;       // lock button 1 after use
                 setOLEDInvert(&oledDevice, &invert);
             }
-            else if (buttonVal == 2){
+            else if (buttonVal == 2 && !button2Locked){
                 if(oneRingEquipped){
                     XGpio_DiscreteWrite(&rgbInst, RGB_CHANNEL, RGB_YELLOW);
+                    button2Locked = 1;
                 }
             }
             else if (buttonVal == 8 && !button8Locked){
@@ -381,6 +385,7 @@ static void buttonTask(void *pvParameters)
                 setOLEDInvert(&oledDevice, &invert);
                 oneRingEquipped = 0;
                 button1Locked = 1;
+                button2Locked = 1;
                 button8Locked = 1;
                 resetGame = 1;
             }
